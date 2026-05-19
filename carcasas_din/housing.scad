@@ -21,7 +21,7 @@
 
 // ── SELECCIÓN ─────────────────────────────────────────────
 MODULO  = "CPU";
-RENDER  = "PREVIEW";
+RENDER  = "PLATE";   // Cambiar a "BODY"/"COVER"/"DIN_CLIP"/"BUS_CAP"/"PREVIEW" según necesidad
 WIDTH_U = 3;
 
 // ── GRID MODULAR ──────────────────────────────────────────
@@ -548,37 +548,58 @@ else if (RENDER == "BUS_CAP") {
     color("#d0d4d8") bus_cap();
 }
 else if (RENDER == "PREVIEW") {
-    // Cuerpo
-    color("#e0e0e0", 0.92) body();
-    // Tapa encastrada
+    // Vista ensamblada — todas las piezas en posición final
+    // Piezas separadas: ver RENDER = "PLATE"
+    //
+    //  ┌─────────────────────┐  ← COVER   (gris claro)
+    //  │  body               │  ← BODY    (gris medio)
+    //  └─────────────────────┘
+    //  [== clip DIN ==]         ← DIN_CLIP (gris oscuro)
+    //   ○ bus cap               ← BUS_CAP  (gris azulado)
+
+    // BODY
+    color("#d8d8d8") body();
+    // COVER encajada en el top (falda va hacia adentro del body)
     translate([TOL, TOL, H])
-        color("#ececec", 0.88) cover();
-    // Clip DIN bajo el body
+        color("#f0f0f0") cover();
+    // DIN CLIP atornillado bajo el body
     translate([0, 0, -clip_base_h])
-        color("#707880") din_clip();
-    // Bus cap lateral (demo lado izquierdo)
-    translate([0, (D - BUS_W)/2, BUS_Z + FL])
+        color("#5a6470") din_clip();
+    // BUS CAP en el lado izquierdo (demo — tapa el orificio libre)
+    translate([-WALL - 1.2, (D - BUS_W)/2, BUS_Z + FL])
         rotate([0, 90, 0])
-        color("#d0d4d8") bus_cap();
-    // Módulo adyacente de ejemplo (preview del snap lateral)
-    translate([W + 0.3, 0, 0])
-        color("#e0e0e0", 0.5) body();
+        color("#b0bcc8") bus_cap();
 }
 else if (RENDER == "PLATE") {
-    // Plato completo listo para el slicer
-    // Orientaciones: body vertical, cover boca abajo (girar en slicer),
-    // clip horizontal, lever horizontal, 2× bus cap
-    sp = 8;
-    color("#e0e0e0") body();
+    // =======================================================
+    // PLATO DE IMPRESIÓN — 5 piezas separadas
+    //
+    // PIEZA 1 — BODY: imprimir vertical (cara frontal al frente)
+    // PIEZA 2 — COVER: ⚠ girar 180° en slicer (techo hacia la cama)
+    // PIEZA 3 — DIN_CLIP: imprimir horizontal (placa base abajo)
+    // PIEZA 4 — DIN_LEVER: imprimir horizontal
+    // PIEZA 5 — BUS_CAP ×2: imprimir de lado (labio hacia arriba)
+    // =======================================================
+    sp = 10;
+
+    // 1. Body — posición de impresión correcta
+    color("#d8d8d8") body();
+
+    // 2. Cover — ⚠ en slicer rotar 180° sobre eje X antes de slicear
     translate([W + sp, 0, 0])
-        color("#ececec") cover();
+        color("#f0f0f0") cover();
+
+    // 3. Clip DIN
     translate([0, D + sp, 0])
-        color("#707880") din_clip();
-    translate([W * 0.25, D + sp + CLP_BH + sp, 0])
-        color("#909898") din_lever();
-    translate([W + sp, D + sp, 0]) {
-        color("#d0d4d8") bus_cap();
-        translate([BUS_W + 5, 0, 0])
-            color("#d0d4d8") bus_cap();
-    }
+        color("#5a6470") din_clip();
+
+    // 4. Palanca de liberación
+    translate([W + sp, D + sp, 0])
+        color("#788090") din_lever();
+
+    // 5. Bus caps (×2 — uno para cada extremo del sistema)
+    translate([0, D + sp + CLP_BH + sp, 0])
+        color("#b0bcc8") bus_cap();
+    translate([BUS_W + sp, D + sp + CLP_BH + sp, 0])
+        color("#b0bcc8") bus_cap();
 }
