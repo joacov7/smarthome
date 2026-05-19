@@ -32,7 +32,7 @@ R    = 5.0;   // radio esquinas verticales
 CF   = 1.6;   // chaflán borde superior
 WALL = 2.0;   // espesor de pared (2mm para PLA: buena rigidez)
 FL   = 1.8;   // espesor piso
-D    = 60.0;  // profundidad (frente→fondo)
+D    = 65.0;  // profundidad (frente→fondo) — 65mm para ESP32 DevKit 30 pines
 H    = 90.0;  // altura cuerpo (sin clip DIN) — ref. imagen: 90mm
 TOL  = 0.25;  // tolerancia encastre (PLA: ligeramente más que PETG)
 $fn  = 40;
@@ -71,6 +71,15 @@ VENT_N   = 3;    // cantidad de slots por lado
 TERM_W   = 0.0;  // 0 = sin apertura. Setear al ancho de tu bornera si querés.
 TERM_H   = 12.0; // alto de la apertura
 // (se calcula automático centrado en la cara frontal)
+
+// ── APERTURA MICRO USB (módulo CPU) ───────────────────────
+// NodeMCU ESP32 CP2102 30-pin usa Micro USB: 7.5mm × 3.5mm
+// Activar para poder reprogramar sin abrir el módulo.
+// Alternativa recomendada: usar OTA (WiFi) para updates en campo.
+USB_CUTOUT = false; // true → agrega apertura Micro USB en cara frontal
+USB_W      = 9.0;  // ancho del corte (Micro USB: 7.5mm + 1.5mm holgura)
+USB_H      = 5.0;  // alto del corte  (Micro USB: 3.5mm + 1.5mm holgura)
+USB_Z      = 3.5;  // altura desde el piso (alineado con conector en PCB)
 
 // ── DIN TS35 ──────────────────────────────────────────────
 DIN_W   = 35.0;
@@ -125,10 +134,11 @@ CAP_FL = 1.0;   // labio exterior
 // ==========================================================
 //   ANCHO CALCULADO
 // ==========================================================
-W = (MODULO=="PSU"    || MODULO=="BORNES") ? 2*U :
-    (MODULO=="CPU"    || MODULO=="IN8"   ) ? 3*U :
-    (MODULO=="RELAY4"                    ) ? 4*U :
+W = (MODULO=="PSU"                              ) ? 2*U :
+    (MODULO=="CPU" || MODULO=="IN8" || MODULO=="BORNES") ? 3*U :
+    (MODULO=="RELAY4"                              ) ? 4*U :
     WIDTH_U * U;
+// BORNES subió a 3U (54mm → interior 50mm) para alojar 10 bornes paso 5mm
 
 // ==========================================================
 //   PRIMITIVAS
@@ -344,6 +354,11 @@ module body() {
 
         // Apertura borneras
         terminal_cut();
+
+        // Apertura Micro USB (solo módulo CPU si USB_CUTOUT=true)
+        if (USB_CUTOUT && MODULO == "CPU")
+            translate([(W - USB_W)/2, -0.01, USB_Z])
+                cube([USB_W, WALL + PNL_I + 0.02, USB_H]);
 
         // Snap hembra (lado izquierdo)
         snap_female_cut();
