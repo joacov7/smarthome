@@ -72,14 +72,13 @@ TERM_W   = 0.0;  // 0 = sin apertura. Setear al ancho de tu bornera si querés.
 TERM_H   = 12.0; // alto de la apertura
 // (se calcula automático centrado en la cara frontal)
 
-// ── APERTURA MICRO USB (módulo CPU) ───────────────────────
-// NodeMCU ESP32 CP2102 30-pin usa Micro USB: 7.5mm × 3.5mm
-// Activar para poder reprogramar sin abrir el módulo.
-// Alternativa recomendada: usar OTA (WiFi) para updates en campo.
-USB_CUTOUT = true;  // true → agrega apertura Micro USB en cara frontal
-USB_W      = 9.0;  // ancho del corte (Micro USB: 7.5mm + 1.5mm holgura)
-USB_H      = 5.0;  // alto del corte  (Micro USB: 3.5mm + 1.5mm holgura)
-USB_Z      = 3.5;  // altura desde el piso (alineado con conector en PCB)
+// ── APERTURA USB TYPE-C (módulo CPU — Waveshare ESP32-S3 Zero) ────────
+// S3 Zero: USB-C nativo, conector 8.9mm × 3.18mm
+// Activar para reprogramar sin abrir. Alternativa: OTA por WiFi.
+USB_CUTOUT = true;   // true → agrega apertura USB-C en cara frontal
+USB_W      = 11.0;  // ancho (USB-C: 8.9mm + 2.1mm holgura para alinear)
+USB_H      =  5.5;  // alto  (USB-C: 3.18mm + 2.3mm holgura)
+USB_Z      =  3.5;  // altura desde piso interior (ajustar según posición PCB)
 
 // ── DIN TS35 ──────────────────────────────────────────────
 DIN_W   = 35.0;
