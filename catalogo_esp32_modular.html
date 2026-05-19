@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sistema Modular ESP32 | Automatización Industrial Argentina</title>
+<style>
+/* ===== VARIABLES DE MARCA ===== */
+:root {
+  --blue: #4fc3f7;
+  --blue-dark: #0288d1;
+  --blue-glow: rgba(79,195,247,0.15);
+  --orange: #ff9800;
+  --orange-glow: rgba(255,152,0,0.12);
+  --bg: #080d18;
+  --bg2: #0b1120;
+  --bg3: #0f1729;
+  --card: #0f1929;
+  --card2: #132035;
+  --border: #192840;
+  --border2: #223354;
+  --text: #dce8f5;
+  --text2: #a0b8d0;
+  --muted: #556e88;
+  --green: #4caf50;
+  --font-mono: 'Courier New', 'Lucida Console', monospace;
+  --font-sans: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --radius: 6px;
+  --tr: 0.28s ease;
+}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--font-sans);line-height:1.6;overflow-x:hidden}
+
+h1,h2,h3{font-weight:800;letter-spacing:-0.02em;line-height:1.15}
+.mono{font-family:var(--font-mono)}
+.blue{color:var(--blue)}
+.orange{color:var(--orange)}
+
+/* ===== NAV ===== */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(8,13,24,0.88);backdrop-filter:blur(14px);border-bottom:1px solid var(--border);padding:0 24px;height:58px;display:flex;align-items:center;justify-content:space-between}
+.nav-logo{font-family:var(--font-mono);font-size:0.88rem;color:var(--blue);font-weight:700;letter-spacing:.05em}
+.nav-logo span{color:var(--orange)}
+.nav-links{display:flex;gap:22px;list-style:none}
+.nav-links a{color:var(--text2);text-decoration:none;font-size:0.8rem;font-family:var(--font-mono);transition:color var(--tr)}
+.nav-links a:hover,.nav-links a.active{color:var(--blue)}
+@media(max-width:640px){.nav-links{display:none}}
+
+/* ===== TIPO DE CAMBIO WIDGET ===== */
+.exchange-widget{position:fixed;top:66px;right:14px;z-index:90;background:var(--card2);border:1px solid var(--border2);border-radius:var(--radius);padding:8px 12px;font-family:var(--font-mono);font-size:0.72rem;display:flex;align-items:center;gap:8px;box-shadow:0 4px 16px rgba(0,0,0,.4)}
+.exchange-widget label{color:var(--muted)}
+.exchange-widget input{width:78px;background:var(--bg);border:1px solid var(--border2);border-radius:3px;color:var(--orange);font-family:var(--font-mono);font-size:0.72rem;padding:3px 6px;text-align:right}
+.exchange-widget input:focus{outline:1px solid var(--orange)}
+@media(max-width:480px){.exchange-widget{top:auto;bottom:88px;right:14px;font-size:0.68rem}}
+
+/* ===== SECTION BASE ===== */
+.sec-wrap{padding:80px 24px;max-width:1100px;margin:0 auto}
+.sec-full{padding:80px 24px}
+.sec-inner{max-width:1100px;margin:0 auto}
+.divider{height:1px;background:linear-gradient(90deg,transparent,var(--border2),transparent);margin:0}
+.section-label{font-family:var(--font-mono);font-size:0.72rem;color:var(--blue);text-transform:uppercase;letter-spacing:.15em;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.section-label::before{content:'';display:inline-block;width:18px;height:2px;background:var(--blue)}
+.section-title{font-size:clamp(1.7rem,4vw,2.7rem);margin-bottom:14px}
+.section-sub{color:var(--text2);font-size:1rem;max-width:600px;margin-bottom:44px}
+
+/* ===== SCROLL REVEAL ===== */
+.reveal{opacity:0;transform:translateY(28px);transition:opacity .65s ease,transform .65s ease}
+.reveal.visible{opacity:1;transform:none}
+
+/* ===== HERO ===== */
+#hero{min-height:100vh;display:flex;flex-direction:column;justify-content:center;padding:110px 28px 60px;position:relative;overflow:hidden}
+.hero-bg{position:absolute;inset:0;background:radial-gradient(ellipse 65% 55% at 75% 50%,rgba(79,195,247,0.07) 0%,transparent 70%),radial-gradient(ellipse 45% 40% at 15% 65%,rgba(255,152,0,0.05) 0%,transparent 60%);pointer-events:none}
+.hero-grid{position:absolute;inset:0;background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);background-size:44px 44px;opacity:.28;pointer-events:none}
+.hero-content{position:relative;max-width:920px;margin:0 auto;width:100%}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(79,195,247,0.09);border:1px solid rgba(79,195,247,0.28);border-radius:20px;padding:6px 16px;font-family:var(--font-mono);font-size:0.72rem;color:var(--blue);margin-bottom:28px;letter-spacing:.1em}
+.hero-badge::before{content:'';width:7px;height:7px;background:var(--blue);border-radius:50%;animation:pulse 1.6s ease infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.8)}}
+.hero-title{font-size:clamp(2.4rem,7vw,4.8rem);font-weight:900;line-height:1.06;margin-bottom:22px}
+.hero-title .ab{color:var(--blue)}
+.hero-title .ao{color:var(--orange)}
+.hero-tagline{font-size:clamp(1rem,2.2vw,1.2rem);color:var(--text2);margin-bottom:36px;max-width:580px;line-height:1.75}
+.hero-specs{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:36px}
+.spec-tag{font-family:var(--font-mono);font-size:0.72rem;padding:5px 12px;background:var(--card);border:1px solid var(--border2);border-radius:4px;color:var(--text2)}
+.spec-tag strong{color:var(--orange)}
+.hero-cta{display:flex;flex-wrap:wrap;gap:14px;align-items:center}
+.btn-primary{display:inline-flex;align-items:center;gap:9px;padding:13px 26px;background:var(--blue);color:#000;font-weight:700;font-size:.9rem;border:none;border-radius:var(--radius);cursor:pointer;text-decoration:none;transition:all var(--tr)}
+.btn-primary:hover{background:#81d4fa;transform:translateY(-2px);box-shadow:0 8px 24px rgba(79,195,247,.35)}
+.btn-secondary{display:inline-flex;align-items:center;gap:9px;padding:13px 26px;background:transparent;color:var(--text);font-weight:600;font-size:.9rem;border:1px solid var(--border2);border-radius:var(--radius);cursor:pointer;text-decoration:none;transition:all var(--tr)}
+.btn-secondary:hover{border-color:var(--blue);color:var(--blue)}
+
+/* ===== BENEFITS ===== */
+.benefits-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:22px}
+.benefit-card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:26px 22px;transition:all var(--tr);position:relative;overflow:hidden}
+.benefit-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--blue),transparent);opacity:0;transition:opacity var(--tr)}
+.benefit-card:hover{border-color:var(--blue);transform:translateY(-4px);box-shadow:0 12px 32px rgba(0,0,0,.5)}
+.benefit-card:hover::before{opacity:1}
+.benefit-icon{width:46px;height:46px;margin-bottom:14px}
+.benefit-title{font-size:1rem;font-weight:700;margin-bottom:7px}
+.benefit-desc{font-size:0.875rem;color:var(--text2);line-height:1.6}
+
+/* ===== MODULES ===== */
+.modules-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(195px,1fr));gap:18px}
+.module-card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:22px 18px;transition:all var(--tr)}
+.module-card:hover{border-color:var(--orange);box-shadow:0 0 24px rgba(255,152,0,.1)}
+.module-icon{width:100%;height:78px;margin-bottom:14px}
+.module-name{font-family:var(--font-mono);font-size:0.82rem;color:var(--orange);letter-spacing:.1em;margin-bottom:5px}
+.module-width{font-family:var(--font-mono);font-size:0.68rem;color:var(--muted);margin-bottom:9px}
+.module-desc{font-size:.85rem;color:var(--text2);line-height:1.5}
+
+/* ===== KITS ===== */
+.kits-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:18px}
+.kit-card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:26px 20px;display:flex;flex-direction:column;transition:all var(--tr);position:relative;overflow:hidden}
+.kit-card.featured{border-color:var(--blue);background:linear-gradient(145deg,var(--card),#0e1e32)}
+.kit-badge{position:absolute;top:14px;right:14px;background:var(--blue);color:#000;font-size:.62rem;font-weight:700;font-family:var(--font-mono);padding:3px 9px;border-radius:10px;text-transform:uppercase;letter-spacing:.1em}
+.kit-card:hover{transform:translateY(-4px);box-shadow:0 16px 40px rgba(0,0,0,.5);border-color:var(--blue)}
+.kit-name{font-family:var(--font-mono);font-size:.7rem;color:var(--muted);letter-spacing:.15em;text-transform:uppercase;margin-bottom:7px}
+.kit-title{font-size:1.25rem;font-weight:800;margin-bottom:4px}
+.kit-price-usd{font-family:var(--font-mono);font-size:1.4rem;font-weight:700;color:var(--orange);margin-bottom:3px}
+.kit-price-ars{font-family:var(--font-mono);font-size:.76rem;color:var(--muted);margin-bottom:18px}
+.kit-modules{list-style:none;margin-bottom:22px;flex:1}
+.kit-modules li{font-size:.83rem;color:var(--text2);padding:5px 0;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:7px}
+.kit-modules li::before{content:'▸';color:var(--blue);font-size:.68rem;flex-shrink:0}
+.btn-consult{display:block;text-align:center;padding:10px 18px;background:transparent;border:1px solid var(--blue);color:var(--blue);border-radius:var(--radius);font-weight:600;font-size:.83rem;cursor:pointer;text-decoration:none;transition:all var(--tr);font-family:var(--font-mono)}
+.btn-consult:hover{background:var(--blue);color:#000}
+
+/* ===== COMPAT ===== */
+.compat-grid{display:flex;flex-wrap:wrap;justify-content:center;gap:18px;margin-top:36px}
+.compat-badge{display:flex;flex-direction:column;align-items:center;gap:10px;padding:22px 26px;background:var(--card);border:1px solid var(--border);border-radius:8px;min-width:135px;transition:all var(--tr)}
+.compat-badge:hover{border-color:var(--blue);transform:translateY(-3px);box-shadow:0 8px 20px rgba(79,195,247,.1)}
+.compat-badge svg{width:46px;height:46px}
+.compat-badge span{font-family:var(--font-mono);font-size:.72rem;color:var(--text2);text-align:center}
+
+/* ===== DIN DIAGRAM ===== */
+.din-diagram-container{position:relative;overflow-x:auto;padding:12px 0 8px}
+.din-diagram{min-width:580px;width:100%;max-width:880px;margin:0 auto;display:block}
+.module-hover-group{cursor:pointer}
+.module-hover-group:hover .mod-rect{filter:brightness(1.35)}
+.din-tooltip{position:absolute;background:var(--card2);border:1px solid var(--blue);border-radius:var(--radius);padding:12px 15px;font-family:var(--font-mono);font-size:.73rem;color:var(--text);pointer-events:none;z-index:50;white-space:nowrap;opacity:0;transition:opacity .18s;box-shadow:0 4px 22px rgba(0,0,0,.6)}
+.din-tooltip.vis{opacity:1}
+.din-tooltip .ttt{color:var(--orange);font-weight:700;margin-bottom:6px;font-size:.78rem}
+.din-tooltip .ttl{color:var(--text2);margin:2px 0}
+.din-tooltip .ttl strong{color:var(--blue)}
+.din-info-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(195px,1fr));gap:14px;margin-top:28px}
+.din-info-card{background:var(--card);border:1px solid var(--border);border-radius:6px;padding:15px}
+.din-info-label{font-family:var(--font-mono);font-size:.68rem;margin-bottom:7px}
+.din-info-text{font-size:.85rem;color:var(--text2);line-height:1.55}
+
+/* ===== FAQ ===== */
+.faq-item{border-bottom:1px solid var(--border)}
+.faq-question{width:100%;background:none;border:none;color:var(--text);font-size:.97rem;font-weight:600;text-align:left;padding:19px 0;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:14px;transition:color var(--tr);font-family:var(--font-sans)}
+.faq-question:hover{color:var(--blue)}
+.faq-chevron{flex-shrink:0;width:19px;height:19px;transition:transform var(--tr);color:var(--blue)}
+.faq-item.open .faq-chevron{transform:rotate(180deg)}
+.faq-answer{max-height:0;overflow:hidden;transition:max-height .38s ease}
+.faq-item.open .faq-answer{max-height:420px}
+.faq-answer-inner{color:var(--text2);font-size:.88rem;line-height:1.72;padding-bottom:18px}
+.faq-answer-inner code{font-family:var(--font-mono);background:var(--card);border:1px solid var(--border);padding:2px 7px;border-radius:3px;color:var(--blue);font-size:.84em}
+
+/* ===== CONTACT ===== */
+.contact-buttons{display:flex;flex-wrap:wrap;justify-content:center;gap:14px;margin-top:28px}
+.btn-wa{display:inline-flex;align-items:center;gap:9px;padding:13px 26px;background:#25D366;color:#000;font-weight:700;border:none;border-radius:var(--radius);cursor:pointer;text-decoration:none;font-size:.9rem;transition:all var(--tr)}
+.btn-wa:hover{background:#20ba5a;transform:translateY(-2px);box-shadow:0 8px 24px rgba(37,211,102,.38)}
+.btn-email{display:inline-flex;align-items:center;gap:9px;padding:13px 26px;background:transparent;border:1px solid var(--border2);color:var(--text);font-weight:600;border-radius:var(--radius);cursor:pointer;text-decoration:none;font-size:.9rem;transition:all var(--tr)}
+.btn-email:hover{border-color:var(--blue);color:var(--blue)}
+
+/* ===== FLOAT WA ===== */
+.float-wa{position:fixed;bottom:22px;right:22px;z-index:200;width:54px;height:54px;background:#25D366;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(37,211,102,.42);transition:all var(--tr);text-decoration:none}
+.float-wa:hover{transform:scale(1.12);box-shadow:0 8px 30px rgba(37,211,102,.5)}
+
+/* ===== FOOTER ===== */
+footer{background:var(--bg);border-top:1px solid var(--border);padding:22px 24px;text-align:center;font-family:var(--font-mono);font-size:.72rem;color:var(--muted)}
+footer a{color:var(--blue);text-decoration:none}
+
+/* ===== RESPONSIVE ===== */
+@media(max-width:768px){.sec-wrap,.sec-full{padding:56px 16px}.hero-title{font-size:2.1rem}.kits-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:480px){.kits-grid,.benefits-grid,.modules-grid{grid-template-columns:1fr}.hero-title{font-size:1.9rem}}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">ESP32<span>://</span>MODULAR</div>
+  <ul class="nav-links">
+    <li><a href="#why">Beneficios</a></li>
+    <li><a href="#modules">Módulos</a></li>
+    <li><a href="#kits">Kits</a></li>
+    <li><a href="#how">Arquitectura</a></li>
+    <li><a href="#faq">FAQ</a></li>
+    <li><a href="#contact">Contacto</a></li>
+  </ul>
+</nav>
+
+<!-- WIDGET TIPO DE CAMBIO -->
+<div class="exchange-widget">
+  <label>USD/ARS:</label>
+  <input type="number" id="exchange-rate" min="1" value="1200">
+</div>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-grid"></div>
+  <div class="hero-content reveal">
+    <div class="hero-badge">AUTOMATIZACIÓN INDUSTRIAL · HECHO EN ARGENTINA</div>
+    <h1 class="hero-title">
+      Sistema Modular<br>
+      <span class="ab">ESP32</span>
+      <span style="color:var(--muted)"> en </span>
+      <span class="ao">Carril DIN</span>
+    </h1>
+    <p class="hero-tagline">
+      Automatización WiFi + MQTT para industria, hogar y laboratorio. Módulos intercambiables en carril DIN 35mm. Compatible con Home Assistant, Node-RED y cualquier broker MQTT.
+    </p>
+    <div class="hero-specs">
+      <span class="spec-tag">Bus <strong>I2C</strong> 6-pin</span>
+      <span class="spec-tag">WiFi <strong>802.11 b/g/n</strong></span>
+      <span class="spec-tag">Carril <strong>DIN 35mm</strong></span>
+      <span class="spec-tag">Relay <strong>10A / 250VAC</strong></span>
+      <span class="spec-tag">Caja <strong>PETG</strong></span>
+      <span class="spec-tag">Firmware <strong>incluido</strong></span>
+      <span class="spec-tag">Soporte <strong>30 días</strong></span>
+    </div>
+    <div class="hero-cta">
+      <a href="#" class="btn-primary" id="hero-wa">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        Consultar por WhatsApp
+      </a>
+      <a href="#kits" class="btn-secondary">Ver kits y precios</a>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- POR QUÉ MODULAR -->
+<section id="why" class="sec-full">
+  <div class="sec-inner">
+    <p class="section-label reveal">Por qué elegir</p>
+    <h2 class="section-title reveal">Diseño modular. <span class="blue">Poder real.</span></h2>
+    <p class="section-sub reveal">No es solo hardware. Es una plataforma que crece con tus proyectos sin reemplazar nada.</p>
+    <div class="benefits-grid">
+
+      <div class="benefit-card reveal">
+        <svg class="benefit-icon" viewBox="0 0 48 48" fill="none">
+          <rect x="3" y="15" width="11" height="20" rx="2" stroke="#4fc3f7" stroke-width="1.8"/>
+          <rect x="18" y="9" width="13" height="26" rx="2" stroke="#4fc3f7" stroke-width="1.8"/>
+          <rect x="35" y="17" width="11" height="18" rx="2" stroke="#4fc3f7" stroke-width="1.8"/>
+          <line x1="14" y1="25" x2="18" y2="25" stroke="#ff9800" stroke-width="2"/>
+          <line x1="31" y1="25" x2="35" y2="25" stroke="#ff9800" stroke-width="2"/>
+          <text x="8" y="42" text-anchor="middle" font-size="5" fill="#4fc3f7" font-family="monospace">+</text>
+          <text x="24" y="42" text-anchor="middle" font-size="5" fill="#4fc3f7" font-family="monospace">+</text>
+          <text x="40" y="42" text-anchor="middle" font-size="5" fill="#4fc3f7" font-family="monospace">+</text>
+        </svg>
+        <div class="benefit-title">Expandible sin límites</div>
+        <div class="benefit-desc">Agregá módulos uno a uno. El bus I2C soporta hasta 127 dispositivos. No cambiás la instalación existente, solo enchufás el nuevo módulo.</div>
+      </div>
+
+      <div class="benefit-card reveal">
+        <svg class="benefit-icon" viewBox="0 0 48 48" fill="none">
+          <circle cx="24" cy="24" r="13" stroke="#4fc3f7" stroke-width="1.8"/>
+          <path d="M24 11 Q36 17 36 24 Q36 33 24 37 Q12 33 12 24 Q12 17 24 11Z" stroke="#4fc3f7" stroke-width="1.2" stroke-dasharray="3,2" fill="none"/>
+          <circle cx="24" cy="24" r="4" fill="#ff9800"/>
+          <line x1="24" y1="5" x2="24" y2="11" stroke="#4fc3f7" stroke-width="2"/>
+          <line x1="43" y1="14" x2="38" y2="18" stroke="#4fc3f7" stroke-width="2"/>
+          <line x1="43" y1="34" x2="38" y2="30" stroke="#4fc3f7" stroke-width="2"/>
+        </svg>
+        <div class="benefit-title">WiFi + MQTT nativo</div>
+        <div class="benefit-desc">Integración inmediata con Home Assistant, Node-RED, OpenHAB o cualquier sistema con broker MQTT. Firmware listo para usar desde el arranque.</div>
+      </div>
+
+      <div class="benefit-card reveal">
+        <svg class="benefit-icon" viewBox="0 0 48 48" fill="none">
+          <rect x="5" y="8" width="38" height="30" rx="3" stroke="#4fc3f7" stroke-width="1.8"/>
+          <path d="M13 24h6l4-8 4 16 4-8h2" stroke="#ff9800" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+          <rect x="5" y="34" width="38" height="4" fill="#192840"/>
+          <circle cx="11" cy="36" r="1.5" fill="#4fc3f7"/>
+          <circle cx="17" cy="36" r="1.5" fill="#4fc3f7"/>
+          <circle cx="23" cy="36" r="1.5" fill="#ff9800"/>
+        </svg>
+        <div class="benefit-title">Carril DIN 35mm industrial</div>
+        <div class="benefit-desc">Instalación en tablero eléctrico estándar. Los módulos hacen clip. Aspecto profesional, acceso fácil, cableado ordenado en paso 5mm.</div>
+      </div>
+
+      <div class="benefit-card reveal">
+        <svg class="benefit-icon" viewBox="0 0 48 48" fill="none">
+          <path d="M24 6 L29 18 L42 18 L32 27 L36 39 L24 31 L12 39 L16 27 L6 18 L19 18 Z" stroke="#4fc3f7" stroke-width="1.8" stroke-linejoin="round" fill="none"/>
+          <circle cx="24" cy="25" r="5" fill="#ff9800" opacity=".75"/>
+        </svg>
+        <div class="benefit-title">Firmware y soporte incluidos</div>
+        <div class="benefit-desc">30 días de soporte técnico incluido. El firmware llega preconfigurado. No necesitás programar nada si no querés. Código fuente disponible si querés.</div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- MÓDULOS -->
+<section id="modules" class="sec-wrap">
+  <p class="section-label reveal">Hardware</p>
+  <h2 class="section-title reveal">Los <span class="orange">5 módulos</span> del sistema</h2>
+  <p class="section-sub reveal">Cada módulo es una unidad funcional completa. Se montan en carril DIN y se interconectan por bus I2C de 6 pines.</p>
+  <div class="modules-grid">
+
+    <!-- PSU -->
+    <div class="module-card reveal">
+      <svg class="module-icon" viewBox="0 0 120 78" fill="none">
+        <rect x="4" y="8" width="112" height="58" rx="4" fill="#0c1827" stroke="#192840" stroke-width="1.5"/>
+        <rect x="13" y="15" width="38" height="42" rx="2" fill="#172438" stroke="#4fc3f7" stroke-width="1"/>
+        <text x="32" y="34" text-anchor="middle" font-size="6" fill="#4fc3f7" font-family="monospace">HLK</text>
+        <text x="32" y="43" text-anchor="middle" font-size="6" fill="#4fc3f7" font-family="monospace">PM01</text>
+        <text x="32" y="52" text-anchor="middle" font-size="5" fill="#556e88" font-family="monospace">600mA</text>
+        <line x1="51" y1="37" x2="68" y2="37" stroke="#ff9800" stroke-width="1.5"/>
+        <text x="74" y="35" font-size="7" fill="#ff9800" font-family="monospace">5V</text>
+        <text x="74" y="45" font-size="6" fill="#556e88" font-family="monospace">DC out</text>
+        <rect x="94" y="20" width="14" height="28" rx="2" fill="#172438" stroke="#223354" stroke-width="1"/>
+        <line x1="96" y1="26" x2="106" y2="26" stroke="#4fc3f7" stroke-width="1"/>
+        <line x1="96" y1="31" x2="106" y2="31" stroke="#4fc3f7" stroke-width="1"/>
+        <line x1="96" y1="36" x2="106" y2="36" stroke="#556e88" stroke-width="1"/>
+        <line x1="96" y1="41" x2="106" y2="41" stroke="#556e88" stroke-width="1"/>
+        <text x="60" y="74" text-anchor="middle" font-size="6.5" fill="#3a5570" font-family="monospace">36mm</text>
+      </svg>
+      <div class="module-name">PSU</div>
+      <div class="module-width">36mm · Alimentación</div>
+      <div class="module-desc">Fuente HLK-PM01. Entrada 110–220VAC universal. Salida 5VDC para alimentar todo el sistema por el bus DIN.</div>
+    </div>
+
+    <!-- CPU -->
+    <div class="module-card reveal">
+      <svg class="module-icon" viewBox="0 0 120 78" fill="none">
+        <rect x="4" y="8" width="112" height="58" rx="4" fill="#0c1827" stroke="#192840" stroke-width="1.5"/>
+        <rect x="10" y="14" width="48" height="46" rx="2" fill="#172438" stroke="#4fc3f7" stroke-width="1"/>
+        <text x="34" y="30" text-anchor="middle" font-size="6.5" fill="#4fc3f7" font-family="monospace">ESP32</text>
+        <rect x="14" y="33" width="40" height="23" rx="1" fill="#080d18"/>
+        <text x="34" y="46" text-anchor="middle" font-size="5.5" fill="#ff9800" font-family="monospace">WiFi MQTT</text>
+        <text x="34" y="54" text-anchor="middle" font-size="5" fill="#4caf50" font-family="monospace">● ONLINE</text>
+        <rect x="64" y="20" width="30" height="19" rx="2" fill="#080d18" stroke="#223354" stroke-width="1"/>
+        <text x="79" y="33" text-anchor="middle" font-size="5.5" fill="#4fc3f7" font-family="monospace">OLED 0.96"</text>
+        <text x="60" y="74" text-anchor="middle" font-size="6.5" fill="#3a5570" font-family="monospace">54mm</text>
+      </svg>
+      <div class="module-name">CPU</div>
+      <div class="module-width">54mm · Control central</div>
+      <div class="module-desc">ESP32 DevKit con pantalla OLED 0.96". WiFi integrado, firmware MQTT preconfigurado. Cerebro de todo el sistema.</div>
+    </div>
+
+    <!-- RELÉS 4CH -->
+    <div class="module-card reveal">
+      <svg class="module-icon" viewBox="0 0 120 78" fill="none">
+        <rect x="4" y="8" width="112" height="58" rx="4" fill="#0c1827" stroke="#192840" stroke-width="1.5"/>
+        <g><rect x="10" y="16" width="22" height="15" rx="2" fill="#172438" stroke="#ff9800" stroke-width="1"/><line x1="21" y1="26" x2="28" y2="22" stroke="#ff9800" stroke-width="1.5"/><circle cx="14" cy="23" r="2" fill="#ff9800"/></g>
+        <g transform="translate(26,0)"><rect x="10" y="16" width="22" height="15" rx="2" fill="#172438" stroke="#ff9800" stroke-width="1"/><line x1="21" y1="26" x2="28" y2="22" stroke="#ff9800" stroke-width="1.5"/><circle cx="14" cy="23" r="2" fill="#ff9800"/></g>
+        <g><rect x="10" y="36" width="22" height="15" rx="2" fill="#172438" stroke="#4fc3f7" stroke-width="1"/><line x1="21" y1="46" x2="28" y2="42" stroke="#4fc3f7" stroke-width="1.5"/><circle cx="14" cy="43" r="2" fill="#4fc3f7"/></g>
+        <g transform="translate(26,0)"><rect x="10" y="36" width="22" height="15" rx="2" fill="#172438" stroke="#4fc3f7" stroke-width="1"/><line x1="21" y1="46" x2="28" y2="42" stroke="#4fc3f7" stroke-width="1.5"/><circle cx="14" cy="43" r="2" fill="#4fc3f7"/></g>
+        <text x="90" y="32" text-anchor="middle" font-size="9" fill="#ff9800" font-family="monospace" font-weight="bold">4CH</text>
+        <text x="90" y="44" text-anchor="middle" font-size="6.5" fill="#556e88" font-family="monospace">10A</text>
+        <text x="90" y="54" text-anchor="middle" font-size="6.5" fill="#556e88" font-family="monospace">250VAC</text>
+        <text x="60" y="74" text-anchor="middle" font-size="6.5" fill="#3a5570" font-family="monospace">72mm</text>
+      </svg>
+      <div class="module-name">RELÉS 4CH</div>
+      <div class="module-width">72mm · Salidas digitales</div>
+      <div class="module-desc">4 relés 10A/250VAC con optoacopladores. Control I2C independiente por canal. Luces, motores, electroválvulas.</div>
+    </div>
+
+    <!-- ENTRADAS 8CH -->
+    <div class="module-card reveal">
+      <svg class="module-icon" viewBox="0 0 120 78" fill="none">
+        <rect x="4" y="8" width="112" height="58" rx="4" fill="#0c1827" stroke="#192840" stroke-width="1.5"/>
+        <circle cx="20" cy="24" r="5" fill="none" stroke="#4fc3f7" stroke-width="1.5"/>
+        <circle cx="35" cy="24" r="5" fill="#ff9800"/>
+        <circle cx="50" cy="24" r="5" fill="none" stroke="#4fc3f7" stroke-width="1.5"/>
+        <circle cx="65" cy="24" r="5" fill="#ff9800"/>
+        <circle cx="20" cy="40" r="5" fill="#ff9800"/>
+        <circle cx="35" cy="40" r="5" fill="none" stroke="#4fc3f7" stroke-width="1.5"/>
+        <circle cx="50" cy="40" r="5" fill="none" stroke="#4fc3f7" stroke-width="1.5"/>
+        <circle cx="65" cy="40" r="5" fill="#ff9800"/>
+        <text x="95" y="27" text-anchor="middle" font-size="9" fill="#4fc3f7" font-family="monospace" font-weight="bold">8CH</text>
+        <text x="95" y="39" text-anchor="middle" font-size="6.5" fill="#556e88" font-family="monospace">5–24V</text>
+        <text x="95" y="50" text-anchor="middle" font-size="6.5" fill="#556e88" font-family="monospace">PC817</text>
+        <text x="60" y="74" text-anchor="middle" font-size="6.5" fill="#3a5570" font-family="monospace">54mm</text>
+      </svg>
+      <div class="module-name">ENTRADAS 8CH</div>
+      <div class="module-width">54mm · Entradas digitales</div>
+      <div class="module-desc">8 entradas digitales aisladas con optoacopladores PC817. Acepta 5–24VDC. Lectura I2C. Sensores, finales de carrera, pulsadores.</div>
+    </div>
+
+    <!-- BORNES -->
+    <div class="module-card reveal">
+      <svg class="module-icon" viewBox="0 0 120 78" fill="none">
+        <rect x="4" y="8" width="112" height="58" rx="4" fill="#0c1827" stroke="#192840" stroke-width="1.5"/>
+        <rect x="10" y="18" width="11" height="34" rx="1" fill="#172438" stroke="#4fc3f7" stroke-width="1"/>
+        <rect x="24" y="18" width="11" height="34" rx="1" fill="#172438" stroke="#4fc3f7" stroke-width="1"/>
+        <rect x="38" y="18" width="11" height="34" rx="1" fill="#172438" stroke="#4fc3f7" stroke-width="1"/>
+        <rect x="52" y="18" width="11" height="34" rx="1" fill="#172438" stroke="#4fc3f7" stroke-width="1"/>
+        <rect x="66" y="18" width="11" height="34" rx="1" fill="#172438" stroke="#4fc3f7" stroke-width="1"/>
+        <rect x="80" y="18" width="11" height="34" rx="1" fill="#172438" stroke="#556e88" stroke-width="1"/>
+        <rect x="94" y="18" width="11" height="34" rx="1" fill="#172438" stroke="#556e88" stroke-width="1"/>
+        <line x1="10" y1="42" x2="105" y2="42" stroke="#223354" stroke-width="1" stroke-dasharray="2,2"/>
+        <text x="60" y="74" text-anchor="middle" font-size="6.5" fill="#3a5570" font-family="monospace">36mm · paso 5mm</text>
+      </svg>
+      <div class="module-name">BORNES</div>
+      <div class="module-width">36mm · Expansión de cableado</div>
+      <div class="module-desc">12 bornes paso 5mm para cableado externo. Cableado limpio y profesional de señales hacia el exterior del tablero.</div>
+    </div>
+
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- KITS -->
+<section id="kits" class="sec-full">
+  <div class="sec-inner">
+    <p class="section-label reveal">Precios</p>
+    <h2 class="section-title reveal">Kits disponibles</h2>
+    <p class="section-sub reveal">Todos incluyen firmware preconfigurado, soporte técnico 30 días y caja PETG. Precios en USD · conversión a ARS editable arriba.</p>
+    <div class="kits-grid">
+
+      <div class="kit-card reveal">
+        <div class="kit-name">KIT-01</div>
+        <div class="kit-title">Básico</div>
+        <div class="kit-price-usd">USD $55–60</div>
+        <div class="kit-price-ars" data-min="55" data-max="60">≈ calculando...</div>
+        <ul class="kit-modules">
+          <li>Módulo PSU (36mm)</li>
+          <li>Módulo CPU ESP32 (54mm)</li>
+          <li>Módulo Relés 4CH (72mm)</li>
+        </ul>
+        <a href="#" class="btn-consult kit-wa" data-kit="Básico (KIT-01)">Consultar</a>
+      </div>
+
+      <div class="kit-card featured reveal">
+        <div class="kit-badge">POPULAR</div>
+        <div class="kit-name">KIT-02</div>
+        <div class="kit-title">Estándar</div>
+        <div class="kit-price-usd">USD $82–90</div>
+        <div class="kit-price-ars" data-min="82" data-max="90">≈ calculando...</div>
+        <ul class="kit-modules">
+          <li>Módulo PSU (36mm)</li>
+          <li>Módulo CPU ESP32 (54mm)</li>
+          <li>Módulo Relés 4CH (72mm)</li>
+          <li>Módulo Entradas 8CH (54mm)</li>
+        </ul>
+        <a href="#" class="btn-consult kit-wa" data-kit="Estándar (KIT-02)">Consultar</a>
+      </div>
+
+      <div class="kit-card reveal">
+        <div class="kit-name">KIT-03</div>
+        <div class="kit-title">Completo</div>
+        <div class="kit-price-usd">USD $105–115</div>
+        <div class="kit-price-ars" data-min="105" data-max="115">≈ calculando...</div>
+        <ul class="kit-modules">
+          <li>Módulo PSU (36mm)</li>
+          <li>Módulo CPU ESP32 (54mm)</li>
+          <li>Módulo Relés 4CH (72mm)</li>
+          <li>Módulo Entradas 8CH (54mm)</li>
+          <li>Módulo Bornes (36mm)</li>
+        </ul>
+        <a href="#" class="btn-consult kit-wa" data-kit="Completo (KIT-03)">Consultar</a>
+      </div>
+
+      <div class="kit-card reveal">
+        <div class="kit-name">KIT-04</div>
+        <div class="kit-title">Industrial</div>
+        <div class="kit-price-usd">USD $145–160</div>
+        <div class="kit-price-ars" data-min="145" data-max="160">≈ calculando...</div>
+        <ul class="kit-modules">
+          <li>Módulo PSU (36mm)</li>
+          <li>Módulo CPU ESP32 (54mm)</li>
+          <li>Módulo Relés 8CH (72mm×2)</li>
+          <li>Módulo Entradas 8CH (54mm)</li>
+          <li>2× Módulo Bornes (36mm)</li>
+        </ul>
+        <a href="#" class="btn-consult kit-wa" data-kit="Industrial (KIT-04)">Consultar</a>
+      </div>
+
+      <div class="kit-card reveal">
+        <div class="kit-name">KIT-05</div>
+        <div class="kit-title">Expansión</div>
+        <div class="kit-price-usd">USD $20–30</div>
+        <div class="kit-price-ars" data-min="20" data-max="30">≈ calculando...</div>
+        <ul class="kit-modules">
+          <li>Módulo adicional suelto</li>
+          <li>Elegí el módulo que necesitás</li>
+          <li>Listo para instalar</li>
+        </ul>
+        <a href="#" class="btn-consult kit-wa" data-kit="Expansión (KIT-05)">Consultar</a>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- COMPATIBILIDAD -->
+<section id="compat" class="sec-wrap" style="text-align:center">
+  <p class="section-label reveal" style="justify-content:center">Ecosistema</p>
+  <h2 class="section-title reveal">Compatible con <span class="blue">todo</span></h2>
+  <p class="section-sub reveal" style="margin:0 auto 0">Si tiene un broker MQTT, funciona. Si no, te enseñamos a configurarlo en 10 minutos.</p>
+  <div class="compat-grid">
+
+    <div class="compat-badge reveal">
+      <svg viewBox="0 0 48 48" fill="none">
+        <path d="M24 5 L43 17 V43 H5 V17 Z" stroke="#18bcf2" stroke-width="2.2" stroke-linejoin="round"/>
+        <rect x="15" y="25" width="18" height="18" rx="2" fill="#18bcf2" opacity=".18" stroke="#18bcf2" stroke-width="1.5"/>
+        <rect x="19" y="29" width="10" height="14" rx="1" fill="#18bcf2" opacity=".85"/>
+        <circle cx="24" cy="13" r="3.5" fill="#18bcf2"/>
+      </svg>
+      <span>Home Assistant</span>
+    </div>
+
+    <div class="compat-badge reveal">
+      <svg viewBox="0 0 48 48" fill="none">
+        <circle cx="24" cy="24" r="15" stroke="#ff6600" stroke-width="2"/>
+        <path d="M11 33 Q24 7 37 33" stroke="#ff6600" stroke-width="2" fill="none"/>
+        <path d="M15 29 Q24 12 33 29" stroke="#ff6600" stroke-width="2" fill="none"/>
+        <circle cx="24" cy="37" r="3" fill="#ff6600"/>
+      </svg>
+      <span>MQTT / Mosquitto</span>
+    </div>
+
+    <div class="compat-badge reveal">
+      <svg viewBox="0 0 48 48" fill="none">
+        <rect x="5" y="18" width="14" height="12" rx="2" fill="#8B0000" stroke="#c0392b" stroke-width="1.2"/>
+        <rect x="29" y="18" width="14" height="12" rx="2" fill="#8B0000" stroke="#c0392b" stroke-width="1.2"/>
+        <line x1="19" y1="24" x2="29" y2="24" stroke="#c0392b" stroke-width="2"/>
+        <circle cx="24" cy="24" r="3.5" fill="#e74c3c"/>
+        <text x="24" y="40" text-anchor="middle" font-size="7" fill="#c0392b" font-family="monospace">Node-RED</text>
+      </svg>
+      <span>Node-RED</span>
+    </div>
+
+    <div class="compat-badge reveal">
+      <svg viewBox="0 0 48 48" fill="none">
+        <rect x="9" y="11" width="30" height="22" rx="3" fill="#172438" stroke="#4fc3f7" stroke-width="1.8"/>
+        <rect x="13" y="15" width="22" height="14" rx="1" fill="#080d18"/>
+        <text x="24" y="25" text-anchor="middle" font-size="7" fill="#4fc3f7" font-family="monospace">ESP32</text>
+        <line x1="9" y1="17" x2="4" y2="17" stroke="#4fc3f7" stroke-width="1.5"/>
+        <line x1="9" y1="21" x2="4" y2="21" stroke="#4fc3f7" stroke-width="1.5"/>
+        <line x1="9" y1="25" x2="4" y2="25" stroke="#4fc3f7" stroke-width="1.5"/>
+        <line x1="39" y1="17" x2="44" y2="17" stroke="#4fc3f7" stroke-width="1.5"/>
+        <line x1="39" y1="21" x2="44" y2="21" stroke="#4fc3f7" stroke-width="1.5"/>
+        <line x1="39" y1="25" x2="44" y2="25" stroke="#4fc3f7" stroke-width="1.5"/>
+        <text x="24" y="42" text-anchor="middle" font-size="6.5" fill="#556e88" font-family="monospace">Espressif</text>
+      </svg>
+      <span>ESP32 / Espressif</span>
+    </div>
+
+    <div class="compat-badge reveal">
+      <svg viewBox="0 0 48 48" fill="none">
+        <circle cx="24" cy="24" r="14" stroke="#f39c12" stroke-width="2"/>
+        <circle cx="24" cy="24" r="8" stroke="#f39c12" stroke-width="2"/>
+        <circle cx="24" cy="24" r="3" fill="#f39c12"/>
+        <line x1="24" y1="10" x2="24" y2="4" stroke="#f39c12" stroke-width="2"/>
+        <line x1="38" y1="24" x2="44" y2="24" stroke="#f39c12" stroke-width="2"/>
+      </svg>
+      <span>openHAB</span>
+    </div>
+
+    <div class="compat-badge reveal">
+      <svg viewBox="0 0 48 48" fill="none">
+        <rect x="7" y="7" width="34" height="34" rx="4" stroke="#4fc3f7" stroke-width="2"/>
+        <text x="24" y="22" text-anchor="middle" font-size="9" fill="#4fc3f7" font-family="monospace">ANY</text>
+        <text x="24" y="33" text-anchor="middle" font-size="7.5" fill="#556e88" font-family="monospace">BROKER</text>
+      </svg>
+      <span>Cualquier broker MQTT</span>
+    </div>
+
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- CÓMO FUNCIONA -->
+<section id="how" class="sec-full">
+  <div class="sec-inner">
+    <p class="section-label reveal">Arquitectura</p>
+    <h2 class="section-title reveal">Cómo funciona el <span class="blue">sistema</span></h2>
+    <p class="section-sub reveal">Todos los módulos se montan en carril DIN 35mm y se interconectan por un bus I2C interno de 6 pines. Pasá el mouse (o tocá en móvil) sobre cada módulo para ver sus specs.</p>
+
+    <div class="din-diagram-container reveal" id="din-wrap" style="position:relative">
+      <svg class="din-diagram" viewBox="0 0 840 250" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- Background -->
+        <rect x="8" y="105" width="824" height="130" rx="5" fill="#0a1120"/>
+        <!-- DIN rail -->
+        <rect x="8" y="158" width="824" height="14" fill="#192840"/>
+        <rect x="8" y="161" width="824" height="7" fill="#223354"/>
+        <!-- I2C Bus line -->
+        <line x1="44" y1="205" x2="796" y2="205" stroke="#4fc3f7" stroke-width="1.8" stroke-dasharray="7,3"/>
+        <text x="420" y="228" text-anchor="middle" font-size="10" fill="#4fc3f7" font-family="monospace">── I²C BUS (SDA · SCL · 5V · GND) ──</text>
+        <!-- WiFi cloud -->
+        <ellipse cx="700" cy="52" rx="54" ry="26" fill="none" stroke="#4fc3f7" stroke-width="1.5" stroke-dasharray="4,3"/>
+        <text x="700" y="48" text-anchor="middle" font-size="8.5" fill="#4fc3f7" font-family="monospace">WiFi 2.4GHz</text>
+        <text x="700" y="62" text-anchor="middle" font-size="8.5" fill="#ff9800" font-family="monospace">MQTT broker</text>
+        <line x1="220" y1="108" x2="660" y2="78" stroke="#4fc3f7" stroke-width="1" stroke-dasharray="4,3" opacity=".35"/>
+
+        <!-- MODULE PSU (36mm → ~75px) -->
+        <g class="module-hover-group" data-mod="psu">
+          <rect class="mod-rect" x="18" y="110" width="75" height="80" rx="4" fill="#0f1929" stroke="#192840" stroke-width="1.8"/>
+          <rect x="18" y="110" width="75" height="4" rx="2" fill="#ff9800"/>
+          <text x="56" y="131" text-anchor="middle" font-size="9" fill="#ff9800" font-family="monospace" font-weight="bold">PSU</text>
+          <text x="56" y="143" text-anchor="middle" font-size="7" fill="#556e88" font-family="monospace">HLK-PM01</text>
+          <text x="56" y="154" text-anchor="middle" font-size="7" fill="#ff9800" font-family="monospace">5V 600mA</text>
+          <text x="56" y="164" text-anchor="middle" font-size="6.5" fill="#3a5570" font-family="monospace">110-220VAC</text>
+          <circle cx="56" cy="205" r="4" fill="#ff9800" opacity=".7"/>
+          <text x="56" y="193" text-anchor="middle" font-size="6" fill="#3a5570" font-family="monospace">36mm</text>
+        </g>
+
+        <!-- MODULE CPU (54mm → ~112px) -->
+        <g class="module-hover-group" data-mod="cpu">
+          <rect class="mod-rect" x="103" y="110" width="112" height="80" rx="4" fill="#0f1929" stroke="#192840" stroke-width="1.8"/>
+          <rect x="103" y="110" width="112" height="4" rx="2" fill="#4fc3f7"/>
+          <text x="159" y="131" text-anchor="middle" font-size="9" fill="#4fc3f7" font-family="monospace" font-weight="bold">CPU</text>
+          <rect x="112" y="136" width="42" height="28" rx="2" fill="#080d18" stroke="#223354" stroke-width="1"/>
+          <text x="133" y="149" text-anchor="middle" font-size="6" fill="#4fc3f7" font-family="monospace">OLED 0.96"</text>
+          <text x="133" y="158" text-anchor="middle" font-size="5.5" fill="#4caf50" font-family="monospace">● ONLINE</text>
+          <text x="183" y="143" text-anchor="middle" font-size="7" fill="#7a95b0" font-family="monospace">ESP32</text>
+          <text x="183" y="154" text-anchor="middle" font-size="7" fill="#ff9800" font-family="monospace">WiFi↑</text>
+          <circle cx="159" cy="205" r="4" fill="#4fc3f7" opacity=".7"/>
+          <text x="159" y="193" text-anchor="middle" font-size="6" fill="#3a5570" font-family="monospace">54mm</text>
+        </g>
+
+        <!-- MODULE RELÉS 4CH (72mm → ~149px) -->
+        <g class="module-hover-group" data-mod="relay">
+          <rect class="mod-rect" x="225" y="110" width="149" height="80" rx="4" fill="#0f1929" stroke="#192840" stroke-width="1.8"/>
+          <rect x="225" y="110" width="149" height="4" rx="2" fill="#ff9800"/>
+          <text x="300" y="131" text-anchor="middle" font-size="9" fill="#ff9800" font-family="monospace" font-weight="bold">RELÉS 4CH</text>
+          <rect x="233" y="136" width="26" height="19" rx="2" fill="#172438" stroke="#ff9800" stroke-width="1"/><line x1="246" y1="148" x2="255" y2="143" stroke="#ff9800" stroke-width="1.5"/><circle cx="237" cy="145" r="2.5" fill="#ff9800"/>
+          <rect x="263" y="136" width="26" height="19" rx="2" fill="#172438" stroke="#ff9800" stroke-width="1"/><line x1="276" y1="148" x2="285" y2="143" stroke="#ff9800" stroke-width="1.5"/><circle cx="267" cy="145" r="2.5" fill="#ff9800"/>
+          <rect x="293" y="136" width="26" height="19" rx="2" fill="#172438" stroke="#4fc3f7" stroke-width="1"/><line x1="306" y1="148" x2="315" y2="143" stroke="#4fc3f7" stroke-width="1.5"/><circle cx="297" cy="145" r="2.5" fill="#4fc3f7"/>
+          <rect x="323" y="136" width="26" height="19" rx="2" fill="#172438" stroke="#4fc3f7" stroke-width="1"/><line x1="336" y1="148" x2="345" y2="143" stroke="#4fc3f7" stroke-width="1.5"/><circle cx="327" cy="145" r="2.5" fill="#4fc3f7"/>
+          <circle cx="300" cy="205" r="4" fill="#ff9800" opacity=".7"/>
+          <text x="300" y="193" text-anchor="middle" font-size="6" fill="#3a5570" font-family="monospace">72mm</text>
+        </g>
+
+        <!-- MODULE ENTRADAS 8CH (54mm → ~112px) -->
+        <g class="module-hover-group" data-mod="inputs">
+          <rect class="mod-rect" x="384" y="110" width="112" height="80" rx="4" fill="#0f1929" stroke="#192840" stroke-width="1.8"/>
+          <rect x="384" y="110" width="112" height="4" rx="2" fill="#4fc3f7"/>
+          <text x="440" y="128" text-anchor="middle" font-size="8" fill="#4fc3f7" font-family="monospace" font-weight="bold">ENTRADAS 8CH</text>
+          <circle cx="396" cy="141" r="4.5" fill="#ff9800"/><circle cx="411" cy="141" r="4.5" fill="none" stroke="#4fc3f7" stroke-width="1.5"/>
+          <circle cx="426" cy="141" r="4.5" fill="#ff9800"/><circle cx="441" cy="141" r="4.5" fill="none" stroke="#4fc3f7" stroke-width="1.5"/>
+          <circle cx="396" cy="156" r="4.5" fill="none" stroke="#4fc3f7" stroke-width="1.5"/><circle cx="411" cy="156" r="4.5" fill="#ff9800"/>
+          <circle cx="426" cy="156" r="4.5" fill="none" stroke="#4fc3f7" stroke-width="1.5"/><circle cx="441" cy="156" r="4.5" fill="#ff9800"/>
+          <text x="472" y="150" text-anchor="middle" font-size="7" fill="#556e88" font-family="monospace">PC817</text>
+          <circle cx="440" cy="205" r="4" fill="#4fc3f7" opacity=".7"/>
+          <text x="440" y="193" text-anchor="middle" font-size="6" fill="#3a5570" font-family="monospace">54mm</text>
+        </g>
+
+        <!-- MODULE BORNES (36mm → ~75px) -->
+        <g class="module-hover-group" data-mod="bornes">
+          <rect class="mod-rect" x="506" y="110" width="75" height="80" rx="4" fill="#0f1929" stroke="#192840" stroke-width="1.8"/>
+          <rect x="506" y="110" width="75" height="4" rx="2" fill="#556e88"/>
+          <text x="544" y="128" text-anchor="middle" font-size="8.5" fill="#7a95b0" font-family="monospace" font-weight="bold">BORNES</text>
+          <rect x="512" y="133" width="9" height="30" rx="1" fill="#172438" stroke="#4fc3f7" stroke-width="1"/>
+          <rect x="524" y="133" width="9" height="30" rx="1" fill="#172438" stroke="#4fc3f7" stroke-width="1"/>
+          <rect x="536" y="133" width="9" height="30" rx="1" fill="#172438" stroke="#4fc3f7" stroke-width="1"/>
+          <rect x="548" y="133" width="9" height="30" rx="1" fill="#172438" stroke="#4fc3f7" stroke-width="1"/>
+          <rect x="560" y="133" width="9" height="30" rx="1" fill="#172438" stroke="#556e88" stroke-width="1"/>
+          <line x1="512" y1="152" x2="569" y2="152" stroke="#223354" stroke-width="1" stroke-dasharray="2,2"/>
+          <circle cx="544" cy="205" r="4" fill="#7a95b0" opacity=".7"/>
+          <text x="544" y="193" text-anchor="middle" font-size="6" fill="#3a5570" font-family="monospace">36mm</text>
+        </g>
+
+        <!-- I2C connector dots -->
+        <circle cx="56"  cy="205" r="3.5" fill="#4fc3f7"/>
+        <circle cx="159" cy="205" r="3.5" fill="#4fc3f7"/>
+        <circle cx="300" cy="205" r="3.5" fill="#4fc3f7"/>
+        <circle cx="440" cy="205" r="3.5" fill="#4fc3f7"/>
+        <circle cx="544" cy="205" r="3.5" fill="#4fc3f7"/>
+
+        <text x="8" y="100" font-size="9" fill="#3a5570" font-family="monospace">▶ CARRIL DIN 35mm</text>
+      </svg>
+
+      <!-- Tooltip -->
+      <div class="din-tooltip" id="din-tip">
+        <div class="ttt" id="tip-title"></div>
+        <div id="tip-body"></div>
+      </div>
+    </div>
+
+    <div class="din-info-grid">
+      <div class="din-info-card">
+        <div class="din-info-label blue">PROTOCOLO INTERNO</div>
+        <div class="din-info-text">I2C a 400kHz por bus de 6 pines. Hasta 127 módulos por bus. Detección automática de dispositivos al arranque.</div>
+      </div>
+      <div class="din-info-card">
+        <div class="din-info-label orange">COMUNICACIÓN MQTT</div>
+        <div class="din-info-text">WiFi 2.4GHz IEEE 802.11 b/g/n. MQTT sobre TCP/IP. Reconexión automática con backoff exponencial ante pérdida de señal.</div>
+      </div>
+      <div class="din-info-card">
+        <div class="din-info-label" style="color:var(--muted)">ALIMENTACIÓN</div>
+        <div class="din-info-text">PSU central provee 5VDC al bus. Todos los módulos se alimentan desde el carril. Sin fuentes adicionales externas.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- FAQ -->
+<section id="faq" class="sec-wrap" style="max-width:800px">
+  <p class="section-label reveal">Soporte</p>
+  <h2 class="section-title reveal">Preguntas <span class="blue">frecuentes</span></h2>
+  <p class="section-sub reveal">Las consultas técnicas más comunes antes de comprar.</p>
+
+  <div class="faq-item reveal">
+    <button class="faq-question">
+      ¿Necesito saber programar para usarlo?
+      <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="6 9 12 15 18 9"/></svg>
+    </button>
+    <div class="faq-answer"><div class="faq-answer-inner">
+      No. El firmware llega preconfigurado. Solo editás un archivo con tu SSID, contraseña WiFi y la IP del broker MQTT. Con Home Assistant y el add-on Mosquitto, son 3 campos y listo. Para personalizaciones avanzadas, el código fuente está disponible y documentado (Arduino C++).
+    </div></div>
+  </div>
+
+  <div class="faq-item reveal">
+    <button class="faq-question">
+      ¿Qué pasa si quiero agregar más relés después?
+      <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="6 9 12 15 18 9"/></svg>
+    </button>
+    <div class="faq-answer"><div class="faq-answer-inner">
+      Comprás un módulo Relés adicional (Kit Expansión, USD $20–30), lo enchufás al carril DIN y lo conectás al bus I2C. El firmware detecta automáticamente los nuevos módulos al reiniciar. Cada módulo tiene dirección I2C configurable por jumper (<code>0x20</code>, <code>0x21</code>...), por lo que podés tener varios módulos del mismo tipo sin conflictos.
+    </div></div>
+  </div>
+
+  <div class="faq-item reveal">
+    <button class="faq-question">
+      ¿Funciona sin internet? ¿Qué pasa si se cae el WiFi?
+      <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="6 9 12 15 18 9"/></svg>
+    </button>
+    <div class="faq-answer"><div class="faq-answer-inner">
+      El sistema opera en red local, sin necesidad de internet. Si cae el WiFi, el ESP32 reintenta con backoff exponencial. Los estados de relés y entradas se mantienen. Para instalaciones críticas se puede configurar un modo failsafe que mantiene o cambia el estado de las salidas al perder conexión.
+    </div></div>
+  </div>
+
+  <div class="faq-item reveal">
+    <button class="faq-question">
+      ¿Puedo instalarlo en un tablero con 220VAC?
+      <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="6 9 12 15 18 9"/></svg>
+    </button>
+    <div class="faq-answer"><div class="faq-answer-inner">
+      Sí. El módulo PSU (HLK-PM01) está diseñado para instalación directa en 110–220VAC. Los relés soportan 10A/250VAC. Sin embargo, la instalación en baja tensión debe hacerla un técnico matriculado. El sistema no reemplaza los dispositivos de protección obligatorios: siempre incluí un termomagnético aguas arriba.
+    </div></div>
+  </div>
+
+  <div class="faq-item reveal">
+    <button class="faq-question">
+      ¿Qué incluye el soporte técnico de 30 días?
+      <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="6 9 12 15 18 9"/></svg>
+    </button>
+    <div class="faq-answer"><div class="faq-answer-inner">
+      Asistencia por WhatsApp para: configuración del firmware, integración con Home Assistant o Node-RED, depuración de problemas de conexión, y configuración de automatizaciones básicas. No cubre instalación física ni electricidad. Horario extendido, respuesta por texto/imagen/video.
+    </div></div>
+  </div>
+
+  <div class="faq-item reveal">
+    <button class="faq-question">
+      ¿Es compatible con Arduino IDE, ESPHome o MicroPython?
+      <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="6 9 12 15 18 9"/></svg>
+    </button>
+    <div class="faq-answer"><div class="faq-answer-inner">
+      Sí. El hardware es un ESP32 estándar. Podés flashearlo con Arduino IDE (paquete Espressif), ESPHome, MicroPython, Tasmota o cualquier otro entorno compatible con ESP32. El bus I2C está en los pines estándar del DevKit. El firmware incluido está en Arduino C++ y es código abierto.
+    </div></div>
+  </div>
+
+</section>
+
+<div class="divider"></div>
+
+<!-- CONTACTO -->
+<section id="contact" class="sec-full" style="text-align:center">
+  <div style="max-width:580px;margin:0 auto">
+    <p class="section-label reveal" style="justify-content:center">Contacto</p>
+    <h2 class="section-title reveal">¿Listo para <span class="orange">automatizar</span>?</h2>
+    <p class="reveal" style="color:var(--text2);margin-top:14px">Consultá por disponibilidad, pedidos a medida y precios mayoristas. Respondemos en menos de 24 hs.</p>
+    <div class="contact-buttons reveal">
+      <a href="#" class="btn-wa" id="contact-wa">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        WhatsApp
+      </a>
+      <a href="#" class="btn-email" id="contact-email">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="2,4 12,13 22,4"/></svg>
+        Enviar email
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- FLOAT WA -->
+<a href="#" class="float-wa" id="float-wa" title="Consultar por WhatsApp">
+  <svg width="27" height="27" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+</a>
+
+<!-- FOOTER -->
+<footer>
+  <div>Sistema Modular ESP32 &middot; <a id="footer-email" href="#">contacto@esp32modular.com.ar</a> &middot; Hecho en Argentina</div>
+  <div style="margin-top:5px;color:#2c3f52">v1.0 &middot; Catálogo de Ventas</div>
+</footer>
+
+<script>
+// ===== CONFIGURACIÓN — editar estos valores =====
+const WHATSAPP_NUMBER = '5491112345678'; // código país + número sin + ni espacios
+const EMAIL           = 'contacto@esp32modular.com.ar';
+const DEFAULT_TC      = 1200; // tipo de cambio inicial ARS/USD
+// ================================================
+
+// --- WhatsApp helpers ---
+function waLink(msg) {
+  return 'https://wa.me/' + WHATSAPP_NUMBER + '?text=' + encodeURIComponent(msg);
+}
+const MSG_GENERAL = 'Hola, quiero consultar sobre el Sistema Modular ESP32.';
+
+function initLinks() {
+  document.getElementById('hero-wa').href    = waLink(MSG_GENERAL);
+  document.getElementById('contact-wa').href = waLink(MSG_GENERAL);
+  document.getElementById('float-wa').href   = waLink(MSG_GENERAL);
+  document.getElementById('contact-email').href = 'mailto:' + EMAIL + '?subject=Consulta Sistema Modular ESP32';
+  document.getElementById('footer-email').href  = 'mailto:' + EMAIL;
+  document.querySelectorAll('.kit-wa').forEach(function(btn) {
+    var kit = btn.dataset.kit;
+    btn.href = waLink('Hola, me interesa el ' + kit + ' del Sistema Modular ESP32. ¿Podés darme más información?');
+  });
+}
+initLinks();
+
+// --- Tipo de cambio ---
+var tc = DEFAULT_TC;
+var tcInput = document.getElementById('exchange-rate');
+tcInput.value = DEFAULT_TC;
+
+function fmtARS(n) {
+  return Math.round(n).toLocaleString('es-AR');
+}
+function updatePrices() {
+  document.querySelectorAll('.kit-price-ars').forEach(function(el) {
+    var mn = parseFloat(el.dataset.min);
+    var mx = parseFloat(el.dataset.max);
+    el.textContent = '≈ ARS $' + fmtARS(mn * tc) + '–$' + fmtARS(mx * tc);
+  });
+}
+updatePrices();
+tcInput.addEventListener('input', function() {
+  var v = parseFloat(this.value);
+  if (v > 0) { tc = v; updatePrices(); }
+});
+
+// --- Scroll reveal with stagger ---
+var revealEls = Array.from(document.querySelectorAll('.reveal'));
+var io = new IntersectionObserver(function(entries) {
+  entries.forEach(function(entry) {
+    if (!entry.isIntersecting) return;
+    var el = entry.target;
+    var delay = parseInt(el.dataset.stagger || 0);
+    setTimeout(function() { el.classList.add('visible'); }, delay);
+    io.unobserve(el);
+  });
+}, { threshold: 0.1, rootMargin: '0px 0px -36px 0px' });
+
+// Group siblings for stagger
+revealEls.forEach(function(el) {
+  var parent = el.parentElement;
+  var siblings = Array.from(parent.children).filter(function(c) { return c.classList.contains('reveal'); });
+  var idx = siblings.indexOf(el);
+  el.dataset.stagger = idx * 80;
+  io.observe(el);
+});
+
+// --- FAQ accordion ---
+document.querySelectorAll('.faq-question').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    var item = btn.parentElement;
+    var wasOpen = item.classList.contains('open');
+    document.querySelectorAll('.faq-item.open').forEach(function(i) { i.classList.remove('open'); });
+    if (!wasOpen) item.classList.add('open');
+  });
+});
+
+// --- DIN tooltip ---
+var tipData = {
+  psu: {
+    title: 'Módulo PSU',
+    rows: [['Ancho','36mm'],['Fuente','HLK-PM01'],['Entrada','110–220VAC'],['Salida','5VDC / 600mA'],['Montaje','Carril DIN 35mm']]
+  },
+  cpu: {
+    title: 'Módulo CPU',
+    rows: [['Ancho','54mm'],['MCU','ESP32 Dual-Core 240MHz'],['Display','OLED 0.96" 128×64px'],['WiFi','802.11 b/g/n 2.4GHz'],['Firmware','MQTT preconfigurado']]
+  },
+  relay: {
+    title: 'Módulo Relés 4CH',
+    rows: [['Ancho','72mm'],['Canales','4 relés independientes'],['Capacidad','10A / 250VAC c/u'],['Aislamiento','Optoacopladores'],['Control I2C','0x20–0x27']]
+  },
+  inputs: {
+    title: 'Módulo Entradas 8CH',
+    rows: [['Ancho','54mm'],['Canales','8 entradas digitales'],['Tensión','5–24VDC'],['Aislamiento','PC817 optoacopladores'],['Control I2C','0x38–0x3F']]
+  },
+  bornes: {
+    title: 'Módulo Bornes',
+    rows: [['Ancho','36mm'],['Terminales','12 bornes'],['Paso','5mm estándar industrial'],['Sección max','4mm² por terminal'],['Uso','Expansión de cableado']]
+  }
+};
+
+var tip     = document.getElementById('din-tip');
+var tipTitle = document.getElementById('tip-title');
+var tipBody  = document.getElementById('tip-body');
+var wrap     = document.getElementById('din-wrap');
+
+function showTip(mod, x, y) {
+  var d = tipData[mod];
+  if (!d) return;
+  tipTitle.textContent = d.title;
+  tipBody.innerHTML = d.rows.map(function(r) {
+    return '<div class="ttl"><strong>' + r[0] + ':</strong> ' + r[1] + '</div>';
+  }).join('');
+  var wRect = wrap.getBoundingClientRect();
+  var tx = x + 14, ty = y + 14;
+  if (tx + 230 > wRect.width) tx = x - 234;
+  if (ty + 140 > wRect.height + wRect.top - wRect.top) ty = y - 148;
+  tip.style.left = tx + 'px';
+  tip.style.top  = ty + 'px';
+  tip.classList.add('vis');
+}
+
+document.querySelectorAll('.module-hover-group').forEach(function(g) {
+  g.addEventListener('mouseenter', function(e) {
+    var wRect = wrap.getBoundingClientRect();
+    showTip(g.dataset.mod, e.clientX - wRect.left, e.clientY - wRect.top);
+  });
+  g.addEventListener('mousemove', function(e) {
+    var wRect = wrap.getBoundingClientRect();
+    var tx = e.clientX - wRect.left + 14;
+    var ty = e.clientY - wRect.top + 14;
+    if (tx + 230 > wRect.width) tx = e.clientX - wRect.left - 234;
+    if (ty + 155 > wRect.height) ty = e.clientY - wRect.top - 158;
+    tip.style.left = tx + 'px';
+    tip.style.top  = ty + 'px';
+  });
+  g.addEventListener('mouseleave', function() { tip.classList.remove('vis'); });
+  g.addEventListener('click', function(e) {
+    if (tip.classList.contains('vis') && tipTitle.textContent === (tipData[g.dataset.mod]||{}).title) {
+      tip.classList.remove('vis'); return;
+    }
+    var wRect = wrap.getBoundingClientRect();
+    showTip(g.dataset.mod, e.clientX - wRect.left, e.clientY - wRect.top);
+  });
+});
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.module-hover-group')) tip.classList.remove('vis');
+});
+
+// --- Nav active section ---
+var navAs = document.querySelectorAll('.nav-links a');
+var secs  = Array.from(document.querySelectorAll('section[id]'));
+window.addEventListener('scroll', function() {
+  var y = window.scrollY + 80;
+  var cur = '';
+  secs.forEach(function(s) {
+    if (s.offsetTop <= y) cur = s.id;
+  });
+  navAs.forEach(function(a) {
+    a.classList.toggle('active', a.getAttribute('href') === '#' + cur);
+  });
+}, {passive:true});
+</script>
+</body>
+</html>
