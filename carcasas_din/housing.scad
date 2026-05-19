@@ -76,7 +76,7 @@ TERM_H   = 12.0; // alto de la apertura
 // NodeMCU ESP32 CP2102 30-pin usa Micro USB: 7.5mm × 3.5mm
 // Activar para poder reprogramar sin abrir el módulo.
 // Alternativa recomendada: usar OTA (WiFi) para updates en campo.
-USB_CUTOUT = false; // true → agrega apertura Micro USB en cara frontal
+USB_CUTOUT = true;  // true → agrega apertura Micro USB en cara frontal
 USB_W      = 9.0;  // ancho del corte (Micro USB: 7.5mm + 1.5mm holgura)
 USB_H      = 5.0;  // alto del corte  (Micro USB: 3.5mm + 1.5mm holgura)
 USB_Z      = 3.5;  // altura desde el piso (alineado con conector en PCB)
