@@ -15,7 +15,7 @@
      "CPU"    → 3U  54mm   ESP32 + OLED
      "RELAY4" → 4U  72mm   Relés 4CH
      "IN8"    → 3U  54mm   Entradas 8CH
-     "BORNES" → 2U  36mm   Bornes de expansión
+     "BORNES" → 3U  54mm   Bornes de expansión
      "CUSTOM" → usa WIDTH_U
    ========================================================== */
 
@@ -103,15 +103,18 @@ BUS_H  =  9.5;
 BUS_Z  = 22.0;  // centro desde piso interior
 BUS_CH =  0.8;  // chaflán
 
-// ── TAPA ──────────────────────────────────────────────────
-CVR_T = 2.0;    // espesor techo
-FLG_H = 6.0;    // altura falda de encastre
+// ── TAPA PLANA CON REBAJE ─────────────────────────────────
+// Diseño: placa plana + labio de alineación que baja al interior.
+// El cuerpo tiene un escalón perimetral en el tope donde la placa apoya.
+// No hay falda profunda → sin problemas de tolerancia.
+CVR_T = 2.0;    // espesor de la placa
+RBT_W = 1.2;    // ancho del escalón cortado en la pared (WALL-RBT_W = piel exterior)
+RBT_H = 3.0;    // profundidad del escalón desde el tope del cuerpo
 
-// Ranuras de ventilación en relieve en la tapa (estética + función)
-RIB_N   = 8;    // cantidad de ranuras
-RIB_W   = 1.2;  // ancho de cada ranura
-RIB_D   = 0.5;  // profundidad (en relieve hacia afuera)
-RIB_GAP = 3.0;  // separación entre ranuras
+// Ranuras decorativas rebajadas en la cara superior (estética Apple)
+RIB_N = 6;      // cantidad de ranuras
+RIB_W = 1.0;    // ancho de cada ranura
+RIB_D = 0.4;    // profundidad (rebajadas, no en relieve → sin overhang)
 
 // ── POSTES PCB M3 ─────────────────────────────────────────
 PST_H  = 8.0;
@@ -370,11 +373,14 @@ module body() {
         vent_slots_cut("L");
         vent_slots_cut("R");
 
-        // Receso superior para la tapa
-        translate([WALL + TOL, WALL + TOL, H - FLG_H - TOL])
-            cube([W - (WALL+TOL)*2,
-                  D - (WALL+TOL)*2,
-                  FLG_H + TOL + 0.5]);
+        // Escalón perimetral para la tapa plana:
+        // amplía el interior en RBT_W a cada lado en los últimos RBT_H mm.
+        // Deja una piel exterior de (WALL-RBT_W) = 0.8mm (2 perímetros 0.4mm).
+        // El escalón horizontal resultante es el apoyo de la placa.
+        translate([WALL - RBT_W, WALL - RBT_W, H - RBT_H])
+            cube([W - 2*(WALL - RBT_W),
+                  D - 2*(WALL - RBT_W),
+                  RBT_H + 1]);
 
         // Pockets insertos M3 (piso)
         insert_pockets();
@@ -392,45 +398,58 @@ module body() {
 }
 
 // ==========================================================
-//   TAPA CON RANURAS EN RELIEVE
+//   TAPA PLANA CON REBAJE
+//
+//   Geometría:
+//     ┌──────────────────────────┐  ← cara superior (plana o con ranuras)
+//     │        placa CVR_T       │  ← espesor 2mm
+//     └──┐                  ┌───┘  ← escalón: apoya sobre pared del cuerpo
+//        │   labio de        │      ← baja RBT_H al interior → alinea sin juego
+//        │   alineación      │
+//        └──────────────────┘
+//
+//   Encaje en el cuerpo:
+//     - Placa asienta en el escalón perimetral (WALL - RBT_W = 0.8mm de pared)
+//     - Labio entra en el interior principal → centra la tapa automáticamente
+//     - Tolerancia lateral: TOL = 0.25mm a cada lado
+//
+//   Impresión: cara superior hacia arriba, sin soportes.
 // ==========================================================
 module cover() {
-    cW = W - TOL*2;
-    cD = D - TOL*2;
-    iW = cW - WALL*2;
-    iD = cD - WALL*2;
-    top_z = FLG_H;
+    // ── Ancho del escalón (zona ampliada al tope del cuerpo) ──
+    sW = W - 2*(WALL - RBT_W);   // = W - 2*0.8 = W - 1.6
+    sD = D - 2*(WALL - RBT_W);
+    // ── Placa (con tolerancia) ────────────────────────────────
+    cW = sW - 2*TOL;
+    cD = sD - 2*TOL;
+    cR = max(R - (WALL - RBT_W), 1.5);
+    // ── Labio de alineación (encaja en interior principal) ────
+    // Interior principal: W - 2*WALL = W - 4mm
+    lW = W - 2*WALL - 2*TOL;
+    lD = D - 2*WALL - 2*TOL;
+    lH = RBT_H;
+    lR = max(R - WALL, 1.0);
+    ox = (cW - lW) / 2;   // offset del labio respecto a la placa
+    oy = (cD - lD) / 2;
 
     difference() {
         union() {
-            // Techo con chaflán
-            apple_box(cW, cD, CVR_T + FLG_H, R - TOL, CF);
-
-            // Ranuras de ventilación en relieve sobre el techo
-            total_rib_w = (RIB_N - 1) * (RIB_W + RIB_GAP);
-            ry0 = cD/2 - total_rib_w/2;
-            for (i = [0 : RIB_N - 1]) {
-                ry = ry0 + i * (RIB_W + RIB_GAP);
-                translate([WALL + 2, ry, top_z + CVR_T])
-                    cube([cW - (WALL+2)*2, RIB_W, RIB_D]);
-            }
+            // Placa principal
+            rbox(cW, cD, CVR_T, cR);
+            // Labio de alineación (cuelga hacia abajo)
+            translate([ox, oy, -lH + 0.01])
+                rbox(lW, lD, lH, lR);
         }
-
-        // Hueco interior de la falda
-        translate([WALL, WALL, 0])
-            cube([iW, iD, FLG_H + 0.1]);
-
-        // 3 ventanas LED — centradas, zona superior de la tapa
-        total_led_w = (LED_N - 1) * LED_P;
-        lx0 = cW/2 - total_led_w/2;
-        for (i = [0 : LED_N - 1])
-            translate([lx0 + i*LED_P, cD*0.25, top_z - 0.1]) {
-                cylinder(h=CVR_T + 0.2, d=LED_D, $fn=20);
-                // Chaflán exterior
-                translate([0, 0, CVR_T - 0.6])
-                    cylinder(h=0.7, d1=LED_D, d2=LED_D + 1.2,
-                             $fn=20);
-            }
+        // Ranuras decorativas rebajadas en la cara superior
+        // (perpendiculares al eje Y, centradas en la placa)
+        rib_zone_y0 = cD * 0.15;
+        rib_zone_y1 = cD * 0.85;
+        rib_step = (rib_zone_y1 - rib_zone_y0) / max(RIB_N - 1, 1);
+        for (i = [0 : RIB_N - 1]) {
+            ry = rib_zone_y0 + i * rib_step - RIB_W/2;
+            translate([ox + 1, ry, CVR_T - RIB_D])
+                cube([lW - 2, RIB_W, RIB_D + 0.01]);
+        }
     }
 }
 
@@ -550,7 +569,8 @@ if (RENDER == "BODY") {
     color("#e0e0e0") body();
 }
 else if (RENDER == "COVER") {
-    // Imprimir boca abajo (techo hacia la cama) para mejor acabado
+    // Imprimir cara superior hacia arriba — sin soportes.
+    // El labio queda suspendido pero tiene pocas capas → soportado por bridging.
     color("#ececec") cover();
 }
 else if (RENDER == "DIN_CLIP") {
@@ -573,8 +593,9 @@ else if (RENDER == "PREVIEW") {
 
     // BODY
     color("#d8d8d8") body();
-    // COVER encajada en el top (falda va hacia adentro del body)
-    translate([TOL, TOL, H])
+    // COVER — placa plana apoyada en el escalón perimetral
+    // La placa queda a ras del tope del cuerpo (Z = H)
+    translate([WALL - RBT_W + TOL, WALL - RBT_W + TOL, H - CVR_T])
         color("#f0f0f0") cover();
     // DIN CLIP atornillado bajo el body
     translate([0, 0, -clip_base_h])
@@ -599,8 +620,9 @@ else if (RENDER == "PLATE") {
     // 1. Body — posición de impresión correcta
     color("#d8d8d8") body();
 
-    // 2. Cover — ⚠ en slicer rotar 180° sobre eje X antes de slicear
-    translate([W + sp, 0, 0])
+    // 2. Cover — imprimir tal cual (cara superior hacia arriba, sin soportes)
+    translate([W + sp, 0, CVR_T])
+        rotate([180, 0, 0])
         color("#f0f0f0") cover();
 
     // 3. Clip DIN
