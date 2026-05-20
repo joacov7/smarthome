@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" style="color-scheme: light only">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -27,18 +27,6 @@
                'Helvetica Neue', sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg:        #000000;
-    --card:      #1C1C1E;
-    --card2:     #2C2C2E;
-    --label1:    #FFFFFF;
-    --label2:    rgba(255,255,255,0.6);
-    --label3:    rgba(255,255,255,0.3);
-    --separator: rgba(255,255,255,0.1);
-    --shadow:    0 2px 24px rgba(0,0,0,0.4);
-  }
-}
 
 /* ── Reset ─────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -155,9 +143,6 @@ body {
   display: flex; align-items: center; justify-content: space-between;
 }
 
-@media (prefers-color-scheme: dark) {
-  .nav-bar { background: rgba(0,0,0,0.85); }
-}
 
 .nav-bar .nav-title {
   font-size: 17px;
@@ -367,9 +352,6 @@ body {
 }
 .toggle input:checked + .toggle-track::after { transform: translateX(20px); }
 
-@media (prefers-color-scheme: dark) {
-  .toggle-track { background: #3A3A3C; }
-}
 
 /* ── Lock button ────────────────────────────────────────── */
 .lock-btn-wrap {
@@ -434,9 +416,6 @@ body {
   z-index: 100;
 }
 
-@media (prefers-color-scheme: dark) {
-  .tab-bar { background: rgba(28,28,30,0.92); }
-}
 
 .tab-item {
   flex: 1;
