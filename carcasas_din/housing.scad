@@ -104,6 +104,19 @@ CLP_LW_LIP=  2.0;   // labio final de retención
 LVR_H     = 18.0;
 LVR_T     =  3.2;
 
+// ── GUÍA LATERAL (Opción B) ───────────────────────────────
+// Módulos deslizan de adelante→atrás sobre la lengüeta.
+// Cola de milano retiene en X. Guías atornilladas al riel.
+GUIDE_W  = 10.0;   // ancho de la pieza guía
+DT_D     =  4.0;   // profundidad cola de milano (en X)
+DT_BH    = 65.0;   // alto del perfil en la cara (en Z)
+DT_Z0    = 10.0;   // inicio Z de la cola desde la base
+DT_ANG   = 30;     // ángulo de la cola (°)
+DT_SE    = DT_D * tan(DT_ANG);  // vuelo Z en la punta
+DT_Y0    =  2.0;   // retraso frontal
+DT_STOP  =  6.0;   // espesor del tope trasero
+DT_Y1    = D - DT_STOP;  // fin del canal en Y
+
 // ==========================================================
 //   PRIMITIVAS
 // ==========================================================
@@ -229,6 +242,44 @@ module back_clip_holes() {
 }
 
 // ==========================================================
+//   COLA DE MILANO — unión módulo ↔ guía
+//
+//   Eje de inserción: Y (frente → fondo)
+//   Perfil en XZ: trapezoide más ancho en la punta (X=-DT_D)
+//   que en la cara (X=0) → el módulo no puede salir en +X.
+//
+//   Sistema de referencia:
+//     X=W  → cara derecha del módulo / cara izquierda de la guía
+//     X=W-DT_D → punta de la lengüeta (dentro del módulo)
+// ==========================================================
+
+// Canal en la cara derecha del módulo (se resta en body)
+module dovetail_slot_cut() {
+    translate([W, DT_Y0, 0])
+        rotate([-90, 0, 0])
+        linear_extrude(DT_Y1 - DT_Y0 + 0.01)
+        polygon([
+            [ 0.01,          DT_Z0 - TOL                 ],
+            [ 0.01,          DT_Z0 + DT_BH + TOL         ],
+            [-(DT_D + TOL),  DT_Z0 + DT_BH + DT_SE + TOL ],
+            [-(DT_D + TOL),  DT_Z0          - DT_SE - TOL ],
+        ]);
+}
+
+// Lengüeta en la cara izquierda de la guía (se suma en guide)
+module dovetail_tongue_solid() {
+    translate([0, DT_Y0, 0])
+        rotate([-90, 0, 0])
+        linear_extrude(DT_Y1 - DT_Y0)
+        polygon([
+            [ 0,      DT_Z0                 ],
+            [ 0,      DT_Z0 + DT_BH         ],
+            [-DT_D,   DT_Z0 + DT_BH + DT_SE ],
+            [-DT_D,   DT_Z0          - DT_SE ],
+        ]);
+}
+
+// ==========================================================
 //   CUERPO PRINCIPAL
 // ==========================================================
 module body() {
@@ -276,6 +327,9 @@ module body() {
             cube([WALL + 0.02, 10, 5]);
         translate([-0.01, (D-10)/2, H - RBT_H - 8])
             cube([WALL + 0.02, 10, 5]);
+
+        // Canal cola de milano para guía lateral (cara derecha)
+        dovetail_slot_cut();
     }
 
     pcb_guide_rails();
@@ -395,6 +449,54 @@ module din_clip() {
 }
 
 // ==========================================================
+//   GUÍA LATERAL — pieza fija atornillada al riel DIN
+//
+//   Una guía por posición de módulo + una al extremo izquierdo.
+//   Pitch entre guías: W + GUIDE_W = 82mm.
+//
+//   Montaje:
+//     1. Atornillar guías al riel con 2× M3 (pasantes en Y)
+//     2. Alinear módulo de frente a la guía
+//     3. Empujar hacia atrás → cola de milano entra en canal
+//     4. Para extraer: tirar hacia adelante
+// ==========================================================
+module guide() {
+    difference() {
+        union() {
+            // Cuerpo
+            rbox(GUIDE_W, D, H, 2.0);
+
+            // Lengüeta cola de milano en cara izquierda (X=0)
+            dovetail_tongue_solid();
+        }
+
+        // Aligerado interior
+        translate([1.8, 1.8, FL + 10])
+            cube([GUIDE_W - 3.6, D - 3.6, H - FL - 20]);
+
+        // 2× M3 pasantes en Y para atornillar al riel
+        for (pz = [H * 0.22, H * 0.78])
+            translate([GUIDE_W/2, -0.01, pz])
+                rotate([-90, 0, 0])
+                cylinder(h = D + 0.02, d = 3.5, $fn = 20);
+
+        // Avellanado M3 en cara trasera (cabeza de tornillo)
+        for (pz = [H * 0.22, H * 0.78])
+            translate([GUIDE_W/2, D - 3.5, pz])
+                rotate([-90, 0, 0])
+                cylinder(h = 4.0, d = 6.5, $fn = 20);
+
+        // Chaflán superior (mismo que el cuerpo del módulo)
+        translate([-0.01, -0.01, H - CF])
+            hull() {
+                cube([GUIDE_W + 0.02, D + 0.02, 0.01]);
+                translate([CF, CF, CF])
+                    cube([GUIDE_W - CF*2 + 0.02, D - CF*2 + 0.02, 0.01]);
+            }
+    }
+}
+
+// ==========================================================
 //   RENDER
 // ==========================================================
 
@@ -406,6 +508,9 @@ else if (RENDER == "COVER") {
 }
 else if (RENDER == "CLIP") {
     color("#4a5258") din_clip();
+}
+else if (RENDER == "GUIDE") {
+    color("#2a3a42") guide();
 }
 else if (RENDER == "PREVIEW") {
     // Cuerpo
@@ -420,6 +525,10 @@ else if (RENDER == "PREVIEW") {
     // Clip DIN — detrás de la pared trasera del módulo
     translate([0, D, CLP_Z - CLP_BODY_H * 0.45])
         color("#3a4248") din_clip();
+
+    // Guía lateral — a la derecha del módulo
+    translate([W, 0, 0])
+        color("#2a3a42", 0.9) guide();
 
     // Riel DIN de referencia (% = fantasma, no se imprime)
     riel_y = D + CLP_BASE_T + DIN_T/2 - DIN_GAP;
@@ -439,4 +548,8 @@ else if (RENDER == "PLATE") {
     // 3. Clip DIN
     translate([0, D + 12, 0])
         color("#3a4248") din_clip();
+
+    // 4. Guía lateral
+    translate([W + 12, D + 12, 0])
+        color("#2a3a42") guide();
 }
