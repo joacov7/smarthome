@@ -7,7 +7,6 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <title>Nido</title>
 <style>
-/* ── Tokens ──────────────────────────────────────────────── */
 :root {
   --bg:        #F2F2F7;
   --card:      #FFFFFF;
@@ -17,20 +16,16 @@
   --red:       #FF3B30;
   --orange:    #FF9500;
   --purple:    #AF52DE;
-  --teal:      #32ADE6;
   --label1:    #000000;
-  --label2:    #3C3C43CC;
+  --label2:    rgba(60,60,67,0.80);
   --label3:    #8E8E93;
   --sep:       rgba(60,60,67,0.12);
   --r:         16px;
   --shadow-sm: 0 1px 8px rgba(0,0,0,0.06);
   --shadow:    0 2px 20px rgba(0,0,0,0.08);
-  --shadow-lg: 0 8px 40px rgba(0,0,0,0.12);
-  --font:      -apple-system, BlinkMacSystemFont, 'SF Pro Display',
-               'Helvetica Neue', sans-serif;
+  --font: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
 }
 
-/* ── Reset ───────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { height: 100%; }
 body {
@@ -40,29 +35,37 @@ body {
   -webkit-font-smoothing: antialiased;
   height: 100%;
   overflow: hidden;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
 }
 
-/* ── Screens ─────────────────────────────────────────────── */
+/* ── Screens ─────────────────────────────────────────── */
 .screen { display: none; height: 100vh; flex-direction: column; }
 .screen.active { display: flex; }
 
-/* ══════════════════════════════════════════════════════════
-   LOGIN
-══════════════════════════════════════════════════════════ */
+/* ══ LOGIN ══════════════════════════════════════════════ */
 #screen-login {
   background: var(--bg);
   align-items: center;
   justify-content: center;
-  padding: 48px 32px 48px;
+  padding: 48px 32px;
+  position: relative;
+  overflow: hidden;
+}
+#screen-login::before {
+  content: '';
+  position: absolute;
+  top: -60px; left: -100px; right: -100px;
+  height: 320px;
+  background: radial-gradient(ellipse at 50% 0%, rgba(0,122,255,0.08) 0%, transparent 68%);
+  pointer-events: none;
 }
 
 .logo-wrap {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin-bottom: 60px;
+  display: flex; flex-direction: column; align-items: center;
+  margin-bottom: 56px;
+  position: relative; z-index: 1;
 }
-
 .logo-mark {
   width: 88px; height: 88px;
   background: var(--blue);
@@ -71,509 +74,426 @@ body {
   margin-bottom: 20px;
   box-shadow: 0 12px 40px rgba(0,122,255,0.30);
 }
-
 .logo-text {
-  font-size: 36px;
-  font-weight: 700;
-  letter-spacing: -1px;
-  color: var(--label1);
+  font-size: 36px; font-weight: 700;
+  letter-spacing: -1.5px; color: var(--label1);
 }
-
 .logo-sub {
-  font-size: 15px;
-  color: var(--label3);
-  margin-top: 5px;
-  text-align: center;
-  line-height: 1.4;
+  font-size: 15px; color: var(--label3);
+  margin-top: 6px; text-align: center; line-height: 1.5;
 }
 
 .field-group {
-  width: 100%;
-  max-width: 340px;
-  background: var(--card);
-  border-radius: var(--r);
-  overflow: hidden;
-  box-shadow: var(--shadow);
-  margin-bottom: 14px;
+  width: 100%; max-width: 340px;
+  background: var(--card); border-radius: var(--r);
+  overflow: hidden; box-shadow: var(--shadow); margin-bottom: 14px;
+  position: relative; z-index: 1;
 }
-
 .field-group input {
-  display: block; width: 100%;
-  padding: 15px 18px;
-  font-family: var(--font);
-  font-size: 16px;
-  color: var(--label1);
-  background: transparent;
-  border: none; outline: none;
+  display: block; width: 100%; padding: 15px 18px;
+  font-family: var(--font); font-size: 16px; color: var(--label1);
+  background: transparent; border: none; outline: none;
 }
 .field-group input + input { border-top: 1px solid var(--sep); }
 .field-group input::placeholder { color: var(--label3); }
 
 .btn-cta {
-  width: 100%; max-width: 340px;
-  padding: 15px;
-  background: var(--blue);
-  color: #fff;
-  font-family: var(--font);
-  font-size: 17px; font-weight: 600;
-  border: none; border-radius: var(--r);
-  cursor: pointer;
+  width: 100%; max-width: 340px; padding: 15px;
+  background: var(--blue); color: #fff;
+  font-family: var(--font); font-size: 17px; font-weight: 600;
+  border: none; border-radius: var(--r); cursor: pointer;
   box-shadow: 0 4px 20px rgba(0,122,255,0.30);
   transition: transform .12s, opacity .12s;
+  position: relative; z-index: 1;
 }
 .btn-cta:active { transform: scale(0.98); opacity: 0.88; }
 
-/* ══════════════════════════════════════════════════════════
-   APP SHELL
-══════════════════════════════════════════════════════════ */
+/* ══ APP SHELL ══════════════════════════════════════════ */
 #screen-main { overflow: hidden; }
 
-/* ── Top nav ─────────────────────────────────────────────── */
 .topbar {
   background: rgba(242,242,247,0.92);
   backdrop-filter: saturate(180%) blur(24px);
   -webkit-backdrop-filter: saturate(180%) blur(24px);
   padding: 54px 20px 10px;
   display: flex; align-items: center; justify-content: space-between;
-  flex-shrink: 0;
-  border-bottom: 1px solid var(--sep);
+  flex-shrink: 0; border-bottom: 1px solid var(--sep);
 }
-
 .app-title {
   font-size: 17px; font-weight: 700;
-  letter-spacing: -0.3px;
-  color: var(--blue);
+  letter-spacing: -0.4px; color: var(--blue);
 }
-
 .prop-pill {
-  display: flex; align-items: center; gap: 5px;
-  background: var(--card2);
-  border: none; border-radius: 20px;
-  padding: 5px 12px 5px 9px;
-  font-family: var(--font);
-  font-size: 13px; font-weight: 500;
-  color: var(--label2);
-  cursor: pointer;
+  display: flex; align-items: center; gap: 6px;
+  background: var(--card2); border: none; border-radius: 20px;
+  padding: 5px 10px 5px 9px;
+  font-family: var(--font); font-size: 13px; font-weight: 500;
+  color: var(--label2); cursor: pointer;
 }
 .prop-pill-dot {
-  width: 8px; height: 8px;
-  border-radius: 50%;
-  background: var(--green);
-  box-shadow: 0 0 6px rgba(52,199,89,0.6);
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--green); box-shadow: 0 0 5px rgba(52,199,89,0.6);
+  flex-shrink: 0;
 }
-
 .topbar-icon {
-  width: 30px; height: 30px;
-  background: var(--card2);
+  width: 30px; height: 30px; background: var(--card2);
   border: none; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
   cursor: pointer; color: var(--label3);
 }
 
-/* ── Scroll area ─────────────────────────────────────────── */
+/* ── Panels ──────────────────────────────────────────── */
 .panels-wrap {
-  flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
-  -webkit-overflow-scrolling: touch;
-  padding-bottom: 88px;
+  flex: 1; overflow-y: auto; overflow-x: hidden;
+  -webkit-overflow-scrolling: touch; padding-bottom: 88px;
 }
-
 .panel { display: none; }
 .panel.active { display: block; }
 
-/* ── Alert strip ─────────────────────────────────────────── */
+@keyframes slide-in-right {
+  from { transform: translateX(38px); opacity: 0; }
+  to   { transform: none; opacity: 1; }
+}
+@keyframes slide-in-left {
+  from { transform: translateX(-38px); opacity: 0; }
+  to   { transform: none; opacity: 1; }
+}
+.panel.slide-right { animation: slide-in-right .28s cubic-bezier(.25,.46,.45,.94) both; }
+.panel.slide-left  { animation: slide-in-left  .28s cubic-bezier(.25,.46,.45,.94) both; }
+
+/* ── Alert strip ─────────────────────────────────────── */
 .alert-strip {
   margin: 12px 16px 0;
-  background: rgba(255,59,48,0.08);
-  border: 1px solid rgba(255,59,48,0.18);
-  border-radius: 12px;
-  padding: 11px 14px;
+  background: rgba(255,59,48,0.08); border: 1px solid rgba(255,59,48,0.16);
+  border-radius: 12px; padding: 11px 10px 11px 14px;
   display: flex; align-items: center; gap: 10px;
   font-size: 13px; font-weight: 500; color: var(--red);
 }
 .alert-strip.hidden { display: none; }
-.alert-strip-icon { font-size: 16px; flex-shrink: 0; }
-
-/* ══ LOCK — protagonista ═════════════════════════════════ */
-.lock-section {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 28px 20px 20px;
+.alert-strip-text { flex: 1; }
+.alert-dismiss {
+  background: none; border: none; color: var(--red);
+  opacity: 0.5; font-size: 20px; cursor: pointer;
+  padding: 0 4px; line-height: 1; flex-shrink: 0;
 }
 
+/* ══ LOCK ═══════════════════════════════════════════════ */
+.lock-section {
+  display: flex; flex-direction: column;
+  align-items: center; padding: 28px 20px 20px;
+}
+
+/* Ring container: 196px = 180px button + 8px padding each side */
 .lock-ring {
   position: relative;
-  width: 180px; height: 180px;
+  width: 196px; height: 196px;
+  display: flex; align-items: center; justify-content: center;
   margin-bottom: 18px;
 }
 
-.lock-btn-main {
-  width: 180px; height: 180px;
-  border-radius: 50%;
-  background: var(--card);
-  border: none;
-  display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
-  gap: 6px;
-  cursor: pointer;
-  box-shadow:
-    0 0 0 8px rgba(0,0,0,0.04),
-    0 12px 40px rgba(0,0,0,0.12);
-  transition: transform .12s cubic-bezier(.25,.46,.45,.94),
-              box-shadow .2s;
-  position: relative;
-  z-index: 1;
+/* Countdown arc overlay */
+.countdown-svg {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  transform: rotate(-90deg);
+  pointer-events: none;
+  opacity: 0; transition: opacity .25s;
 }
-.lock-btn-main:active {
-  transform: scale(0.94);
-  box-shadow:
-    0 0 0 6px rgba(0,0,0,0.03),
-    0 6px 20px rgba(0,0,0,0.10);
-}
-.lock-btn-main.unlocked {
-  box-shadow:
-    0 0 0 8px rgba(52,199,89,0.12),
-    0 12px 40px rgba(52,199,89,0.20);
+.countdown-svg.visible { opacity: 1; }
+/* 2π × 90 ≈ 565 */
+#countdownCircle {
+  fill: none; stroke: var(--green);
+  stroke-width: 3.5; stroke-linecap: round;
+  stroke-dasharray: 565;
+  stroke-dashoffset: 565;
 }
 
-.lock-btn-icon { font-size: 52px; line-height: 1; }
+/* Pulse ring (unlocked state) */
+.lock-pulse {
+  position: absolute; inset: 8px;
+  border-radius: 50%; border: 2px solid var(--green);
+  animation: lpulse 1.8s ease-out infinite;
+  display: none; pointer-events: none;
+}
+.unlocked .lock-pulse { display: block; }
+@keyframes lpulse {
+  0%   { transform: scale(1);    opacity: .4; }
+  70%  { transform: scale(1.18); opacity: 0;  }
+  100% { transform: scale(1.18); opacity: 0;  }
+}
+
+/* Main button */
+.lock-btn-main {
+  width: 180px; height: 180px; border-radius: 50%;
+  background: var(--card); border: none;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 10px;
+  cursor: pointer;
+  box-shadow: 0 0 0 8px rgba(0,0,0,0.04), 0 12px 40px rgba(0,0,0,0.12);
+  transition: box-shadow .25s; position: relative; z-index: 1;
+}
+.lock-btn-main:active {
+  box-shadow: 0 0 0 6px rgba(0,0,0,0.03), 0 6px 20px rgba(0,0,0,0.10);
+}
+.lock-btn-main.unlocked {
+  box-shadow: 0 0 0 8px rgba(52,199,89,0.10), 0 12px 40px rgba(52,199,89,0.20);
+}
+
+@keyframes lbounce {
+  0%   { transform: scale(1); }
+  30%  { transform: scale(0.93); }
+  65%  { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+.lock-btn-main.bounce { animation: lbounce .38s cubic-bezier(.36,.07,.19,.97); }
+
+/* SVG lock icon (two states, opacity swap) */
+.lock-icon-wrap { position: relative; width: 52px; height: 52px; }
+.lock-icon { position: absolute; inset: 0; transition: opacity .25s ease; }
+.lock-icon-open { opacity: 0; }
+.lock-btn-main.unlocked .lock-icon-locked { opacity: 0; }
+.lock-btn-main.unlocked .lock-icon-open   { opacity: 1; }
+
 .lock-btn-label {
-  font-size: 13px; font-weight: 600;
-  color: var(--label3);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
+  font-size: 12px; font-weight: 600; color: var(--label3);
+  text-transform: uppercase; letter-spacing: .08em;
+  font-variant-numeric: tabular-nums;
 }
 .lock-btn-main.unlocked .lock-btn-label { color: var(--green); }
 
-/* Pulse ring cuando está abierta */
-@keyframes lock-pulse {
-  0%   { transform: scale(1);   opacity: 0.35; }
-  70%  { transform: scale(1.18); opacity: 0; }
-  100% { transform: scale(1.18); opacity: 0; }
-}
-.lock-pulse {
-  position: absolute; inset: -8px;
-  border-radius: 50%;
-  border: 2px solid var(--green);
-  animation: lock-pulse 1.8s ease-out infinite;
-  display: none;
-}
-.unlocked .lock-pulse { display: block; }
-
-.lock-sub-row {
-  display: flex; gap: 12px;
-}
-
+/* Sub-buttons */
+.lock-sub-row { display: flex; gap: 12px; }
 .lock-sub-btn {
-  flex: 1;
-  padding: 12px;
-  background: var(--card);
-  border: none; border-radius: 12px;
-  font-family: var(--font);
-  font-size: 13px; font-weight: 600;
-  color: var(--label2);
-  cursor: pointer;
+  flex: 1; padding: 12px 16px;
+  background: var(--card); border: none; border-radius: 12px;
+  font-family: var(--font); font-size: 13px; font-weight: 600;
+  color: var(--label2); cursor: pointer;
   box-shadow: var(--shadow-sm);
-  display: flex; align-items: center; justify-content: center; gap: 6px;
-  transition: transform .1s;
-  max-width: 140px;
+  display: flex; align-items: center; justify-content: center; gap: 7px;
+  transition: transform .12s; max-width: 145px;
 }
 .lock-sub-btn:active { transform: scale(0.97); }
 
-/* ══ STATS ROW ═══════════════════════════════════════════ */
+/* ══ STATS ROW ══════════════════════════════════════════ */
 .stats-row {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-  padding: 0 16px 4px;
+  display: grid; grid-template-columns: repeat(3,1fr);
+  gap: 10px; padding: 0 16px 4px;
 }
-
 .stat-card {
-  background: var(--card);
-  border-radius: 14px;
-  padding: 14px 12px;
-  box-shadow: var(--shadow-sm);
-  display: flex; flex-direction: column; gap: 6px;
+  background: var(--card); border-radius: 14px;
+  padding: 14px 12px; box-shadow: var(--shadow-sm);
+  display: flex; flex-direction: column; gap: 4px;
 }
-
 .stat-label {
   font-size: 11px; font-weight: 600;
-  text-transform: uppercase; letter-spacing: 0.05em;
-  color: var(--label3);
+  text-transform: uppercase; letter-spacing: .05em; color: var(--label3);
 }
 .stat-value {
   font-size: 22px; font-weight: 700;
-  letter-spacing: -0.5px;
-  color: var(--label1);
-  line-height: 1;
+  letter-spacing: -.5px; color: var(--label1); line-height: 1;
+  font-variant-numeric: tabular-nums;
 }
-.stat-unit {
-  font-size: 11px; color: var(--label3); font-weight: 500;
-}
+.stat-unit  { font-size: 11px; color: var(--label3); font-weight: 500; }
+.stat-trend { font-size: 11px; font-weight: 600; }
+.stat-trend.ok   { color: var(--green); }
+.stat-trend.warn { color: var(--orange); }
 
-/* ══ SENSORS GRID ════════════════════════════════════════ */
+/* ══ SECTION LABEL ══════════════════════════════════════ */
 .section-label {
   font-size: 13px; font-weight: 600;
-  text-transform: uppercase; letter-spacing: 0.05em;
-  color: var(--label3);
-  margin: 16px 20px 8px;
+  text-transform: uppercase; letter-spacing: .05em;
+  color: var(--label3); margin: 18px 20px 10px;
 }
 
+/* ══ SENSOR GRID ════════════════════════════════════════ */
 .sensor-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-  padding: 0 16px;
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 10px; padding: 0 16px;
 }
-
 .sensor-card {
-  background: var(--card);
-  border-radius: 14px;
-  padding: 16px;
-  box-shadow: var(--shadow-sm);
+  background: var(--card); border-radius: 16px;
+  padding: 15px; box-shadow: var(--shadow-sm);
   display: flex; flex-direction: column; gap: 10px;
   position: relative;
-  overflow: hidden;
 }
-
-.sensor-icon { font-size: 28px; line-height: 1; }
-
-.sensor-info { flex: 1; }
-.sensor-name {
-  font-size: 13px; font-weight: 600;
-  color: var(--label1);
-}
-.sensor-status {
-  font-size: 12px; font-weight: 500;
-  margin-top: 2px;
-}
-.sensor-status.ok     { color: var(--green); }
-.sensor-status.alert  { color: var(--red); }
-.sensor-status.warn   { color: var(--orange); }
-
 .sensor-dot {
-  position: absolute; top: 14px; right: 14px;
+  position: absolute; top: 13px; right: 13px;
   width: 8px; height: 8px; border-radius: 50%;
 }
-.sensor-dot.ok     { background: var(--green); }
-.sensor-dot.alert  { background: var(--red); animation: pulse-dot 2s infinite; }
-.sensor-dot.warn   { background: var(--orange); }
-
-@keyframes pulse-dot {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(255,59,48,0.5); }
-  50%       { box-shadow: 0 0 0 5px rgba(255,59,48,0); }
+.sensor-dot.ok    { background: var(--green); }
+.sensor-dot.alert { background: var(--red); animation: dotpulse 2s infinite; }
+.sensor-dot.warn  { background: var(--orange); }
+@keyframes dotpulse {
+  0%,100% { box-shadow: 0 0 0 0 rgba(255,59,48,.5); }
+  50%     { box-shadow: 0 0 0 5px rgba(255,59,48,0); }
 }
 
-/* ══ ENERGY ROW ══════════════════════════════════════════ */
+.sensor-icon-wrap {
+  width: 40px; height: 40px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center; font-size: 20px;
+}
+.sensor-icon-wrap.green  { background: rgba(52,199,89,.12); }
+.sensor-icon-wrap.blue   { background: rgba(0,122,255,.12); }
+.sensor-icon-wrap.orange { background: rgba(255,149,0,.12); }
+.sensor-icon-wrap.purple { background: rgba(175,82,222,.12); }
+
+.sensor-name   { font-size: 13px; font-weight: 600; color: var(--label1); }
+.sensor-status { font-size: 12px; font-weight: 500; margin-top: 2px; }
+.sensor-status.ok    { color: var(--green); }
+.sensor-status.alert { color: var(--red); }
+.sensor-status.warn  { color: var(--orange); }
+.sensor-time { font-size: 11px; color: var(--label3); margin-top: 1px; }
+
+/* ══ ENERGY CARD ════════════════════════════════════════ */
 .energy-card {
-  margin: 0 16px;
-  background: var(--card);
-  border-radius: var(--r);
-  padding: 16px;
-  box-shadow: var(--shadow-sm);
-  display: flex; align-items: center; gap: 14px;
+  margin: 0 16px; background: var(--card);
+  border-radius: var(--r); padding: 16px;
+  box-shadow: var(--shadow-sm); display: flex; align-items: center; gap: 14px;
 }
-
 .energy-icon {
-  width: 44px; height: 44px;
-  border-radius: 12px;
-  background: rgba(255,149,0,0.12);
+  width: 44px; height: 44px; border-radius: 12px;
+  background: rgba(255,149,0,.12);
   display: flex; align-items: center; justify-content: center;
   font-size: 22px; flex-shrink: 0;
 }
-
 .energy-info { flex: 1; }
 .energy-title { font-size: 15px; font-weight: 600; }
-.energy-sub   { font-size: 13px; color: var(--label3); margin-top: 2px; }
-
+.energy-sub   { font-size: 12px; color: var(--label3); margin-top: 2px; }
 .energy-toggles { display: flex; flex-direction: column; gap: 10px; }
+.energy-row { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--label2); }
+.energy-row-label { flex: 1; }
 
-.energy-row {
-  display: flex; align-items: center; gap: 8px;
-  font-size: 13px; color: var(--label2);
-}
-
-.mini-toggle {
-  position: relative; width: 40px; height: 24px; flex-shrink: 0;
-}
-.mini-toggle input { opacity: 0; width: 0; height: 0; }
+/* ══ TOGGLE ═════════════════════════════════════════════ */
+.mini-toggle { position: relative; width: 40px; height: 24px; flex-shrink: 0; cursor: pointer; }
+.mini-toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
 .mini-track {
-  position: absolute; inset: 0;
-  background: #E5E5EA;
-  border-radius: 24px;
-  cursor: pointer;
-  transition: background .2s;
+  position: absolute; inset: 0; background: #E5E5EA;
+  border-radius: 24px; cursor: pointer; transition: background .2s;
 }
 .mini-toggle input:checked + .mini-track { background: var(--green); }
 .mini-track::after {
-  content: '';
-  position: absolute;
-  width: 20px; height: 20px;
-  left: 2px; top: 2px;
-  background: white;
-  border-radius: 50%;
-  transition: transform .2s;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+  content: ''; position: absolute;
+  width: 20px; height: 20px; left: 2px; top: 2px;
+  background: white; border-radius: 50%;
+  transition: transform .2s; box-shadow: 0 1px 4px rgba(0,0,0,.20);
 }
 .mini-toggle input:checked + .mini-track::after { transform: translateX(16px); }
 
-/* ══ LIST CARD ═══════════════════════════════════════════ */
+/* ══ LIST CARD ══════════════════════════════════════════ */
 .list-card {
-  margin: 0 16px;
-  background: var(--card);
-  border-radius: var(--r);
-  overflow: hidden;
-  box-shadow: var(--shadow-sm);
+  margin: 0 16px; background: var(--card);
+  border-radius: var(--r); overflow: hidden; box-shadow: var(--shadow-sm);
 }
-
 .list-row {
   display: flex; align-items: center;
-  padding: 13px 16px; gap: 12px;
-  cursor: pointer;
+  padding: 13px 16px; gap: 12px; cursor: pointer;
   transition: background .1s;
 }
 .list-row:active { background: var(--card2); }
 .list-row + .list-row { border-top: 1px solid var(--sep); }
-
 .row-ico {
-  width: 32px; height: 32px;
-  border-radius: 8px;
+  width: 32px; height: 32px; border-radius: 8px;
   display: flex; align-items: center; justify-content: center;
   font-size: 16px; flex-shrink: 0;
 }
-.row-ico.blue   { background: rgba(0,122,255,0.12); }
-.row-ico.green  { background: rgba(52,199,89,0.12); }
-.row-ico.red    { background: rgba(255,59,48,0.12); }
-.row-ico.orange { background: rgba(255,149,0,0.12); }
-.row-ico.purple { background: rgba(175,82,222,0.12); }
-.row-ico.gray   { background: rgba(142,142,147,0.12); }
-
+.row-ico.blue   { background: rgba(0,122,255,.12); }
+.row-ico.green  { background: rgba(52,199,89,.12); }
+.row-ico.red    { background: rgba(255,59,48,.12); }
+.row-ico.orange { background: rgba(255,149,0,.12); }
+.row-ico.purple { background: rgba(175,82,222,.12); }
 .row-text { flex: 1; }
 .row-main { font-size: 15px; color: var(--label1); }
 .row-hint { font-size: 12px; color: var(--label3); margin-top: 1px; }
-
-.row-right {
-  font-size: 13px; font-weight: 500; color: var(--label3);
-}
+.row-right { font-size: 13px; font-weight: 500; color: var(--label3); }
 .row-right.ok { color: var(--green); }
-.row-chevron  { color: var(--label3); font-size: 12px; }
+.row-chevron { color: #C7C7CC; font-size: 18px; font-weight: 300; }
 
-/* ══ TENANT PANEL ════════════════════════════════════════ */
+/* ══ TENANT HERO ════════════════════════════════════════ */
 .tenant-hero {
-  margin: 12px 16px 0;
-  background: var(--card);
-  border-radius: 20px;
-  padding: 20px;
-  box-shadow: var(--shadow-sm);
-  display: flex; align-items: center; gap: 16px;
+  margin: 14px 16px 0; background: var(--card);
+  border-radius: 20px; padding: 20px;
+  box-shadow: var(--shadow-sm); display: flex; align-items: center; gap: 16px;
 }
-
 .avatar {
-  width: 54px; height: 54px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #007AFF, #5AC8FA);
+  width: 56px; height: 56px; border-radius: 50%;
+  background: linear-gradient(135deg, #007AFF 0%, #5AC8FA 100%);
   display: flex; align-items: center; justify-content: center;
-  color: white; font-size: 22px; font-weight: 700;
-  flex-shrink: 0;
+  color: white; font-size: 22px; font-weight: 700; flex-shrink: 0;
+  box-shadow: 0 4px 16px rgba(0,122,255,.25);
 }
-
 .tenant-meta { flex: 1; }
-.tenant-name { font-size: 17px; font-weight: 700; }
-.tenant-since { font-size: 13px; color: var(--label3); margin-top: 3px; }
-
+.tenant-name  { font-size: 17px; font-weight: 700; }
+.tenant-since { font-size: 13px; color: var(--label3); margin-top: 4px; }
 .badge-active {
-  background: rgba(52,199,89,0.12);
-  color: var(--green);
-  font-size: 12px; font-weight: 600;
-  padding: 4px 10px; border-radius: 20px;
-  white-space: nowrap;
+  background: rgba(52,199,89,.12); color: var(--green);
+  font-size: 12px; font-weight: 600; padding: 4px 10px;
+  border-radius: 20px; white-space: nowrap;
 }
 
-/* ══ PROPERTIES PANEL ════════════════════════════════════ */
+/* ══ PROPERTY CARDS ═════════════════════════════════════ */
 .prop-card {
-  margin: 0 16px 10px;
-  background: var(--card);
-  border-radius: 18px;
-  padding: 16px;
-  box-shadow: var(--shadow-sm);
-  display: flex; align-items: center; gap: 14px;
-  cursor: pointer;
-  transition: transform .1s;
+  margin: 0 16px 10px; background: var(--card);
+  border-radius: 18px; padding: 16px;
+  box-shadow: var(--shadow-sm); display: flex; align-items: center; gap: 14px;
+  cursor: pointer; transition: transform .12s;
 }
 .prop-card:active { transform: scale(0.98); }
-
 .prop-thumb {
-  width: 50px; height: 50px;
-  border-radius: 12px;
+  width: 50px; height: 50px; border-radius: 12px;
   display: flex; align-items: center; justify-content: center;
   font-size: 24px; flex-shrink: 0;
 }
-.prop-thumb.green  { background: rgba(52,199,89,0.12); }
-.prop-thumb.orange { background: rgba(255,149,0,0.12); }
-.prop-thumb.gray   { background: rgba(142,142,147,0.10); opacity: 0.5; }
-
+.prop-thumb.green  { background: rgba(52,199,89,.12); }
+.prop-thumb.orange { background: rgba(255,149,0,.12); }
+.prop-thumb.gray   { background: rgba(142,142,147,.10); opacity: .6; }
 .prop-info { flex: 1; }
-.prop-name  { font-size: 15px; font-weight: 600; }
-.prop-meta  { font-size: 12px; color: var(--label3); margin-top: 3px; }
-
-.prop-status-dot {
-  width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
-}
-.prop-status-dot.green  { background: var(--green); box-shadow: 0 0 6px rgba(52,199,89,0.5); }
+.prop-name { font-size: 15px; font-weight: 600; }
+.prop-meta { font-size: 12px; color: var(--label3); margin-top: 3px; }
+.prop-status-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.prop-status-dot.green  { background: var(--green); box-shadow: 0 0 6px rgba(52,199,89,.5); }
 .prop-status-dot.orange { background: var(--orange); }
 .prop-status-dot.gray   { background: #C7C7CC; }
 
-/* ══ HISTORY ═════════════════════════════════════════════ */
+/* ══ HISTORY ════════════════════════════════════════════ */
+.history-day {
+  font-size: 12px; font-weight: 600; color: var(--label3);
+  padding: 14px 20px 6px;
+  text-transform: uppercase; letter-spacing: .04em;
+}
 .timeline-item {
-  display: flex; align-items: flex-start; gap: 12px;
-  padding: 12px 16px;
+  display: flex; align-items: flex-start; gap: 12px; padding: 12px 16px;
 }
 .timeline-item + .timeline-item { border-top: 1px solid var(--sep); }
-
 .timeline-icon {
-  width: 32px; height: 32px;
-  border-radius: 50%;
+  width: 34px; height: 34px; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
-  font-size: 14px; flex-shrink: 0; margin-top: 1px;
+  font-size: 15px; flex-shrink: 0;
 }
+.timeline-body { flex: 1; padding-top: 1px; }
+.timeline-title { font-size: 14px; font-weight: 500; line-height: 1.3; }
+.timeline-time  { font-size: 12px; color: var(--label3); margin-top: 3px; }
 
-.timeline-body { flex: 1; }
-.timeline-title { font-size: 14px; font-weight: 500; }
-.timeline-time  { font-size: 12px; color: var(--label3); margin-top: 2px; }
-
-/* ── Tab bar ─────────────────────────────────────────────── */
+/* ══ TAB BAR ════════════════════════════════════════════ */
 .tabbar {
   position: fixed; bottom: 0; left: 0; right: 0;
-  background: rgba(242,242,247,0.94);
+  background: rgba(242,242,247,0.95);
   backdrop-filter: saturate(180%) blur(24px);
   -webkit-backdrop-filter: saturate(180%) blur(24px);
   border-top: 1px solid var(--sep);
-  display: flex;
-  padding-bottom: env(safe-area-inset-bottom, 12px);
-  z-index: 200;
+  display: flex; padding-bottom: env(safe-area-inset-bottom,12px); z-index: 200;
 }
-
 .tab {
-  flex: 1;
-  display: flex; flex-direction: column;
+  flex: 1; display: flex; flex-direction: column;
   align-items: center; justify-content: center;
-  padding: 8px 0 4px;
-  border: none; background: transparent;
-  cursor: pointer; gap: 3px;
-  transition: opacity .1s;
+  padding: 9px 0 5px; border: none; background: transparent;
+  cursor: pointer; gap: 4px; color: var(--label3); transition: color .15s;
 }
-.tab:active { opacity: 0.7; }
-
-.tab-ico { font-size: 22px; }
-.tab-lbl {
-  font-size: 10px; font-weight: 500;
-  font-family: var(--font);
-  color: var(--label3);
-}
-.tab.active .tab-lbl { color: var(--blue); }
-.tab.active .tab-ico  { filter: saturate(1); }
+.tab:active { opacity: .7; }
+.tab.active { color: var(--blue); }
+.tab-ico { line-height: 1; }
+.tab-ico svg { display: block; transition: stroke-width .15s; }
+.tab.active .tab-ico svg { stroke-width: 2.3; }
+.tab-lbl { font-size: 10px; font-weight: 500; font-family: var(--font); color: inherit; }
 </style>
 </head>
 <body>
@@ -583,10 +503,10 @@ body {
   <div class="logo-wrap">
     <div class="logo-mark">
       <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
-        <circle cx="24" cy="24" r="14" stroke="white" stroke-width="2.5" stroke-opacity="0.4"/>
-        <circle cx="24" cy="24" r="8"  fill="white" fill-opacity="0.25"/>
-        <circle cx="24" cy="24" r="4"  fill="white"/>
-        <rect x="23" y="6" width="2" height="8" rx="1" fill="white"/>
+        <path d="M8 22L24 8l16 14v18H30V30a6 6 0 0 0-12 0v10H8V22z"
+              fill="white" fill-opacity=".25" stroke="white" stroke-width="2.2"
+              stroke-linejoin="round"/>
+        <rect x="19" y="30" width="10" height="10" rx="2" fill="white" fill-opacity=".5"/>
       </svg>
     </div>
     <div class="logo-text">Nido</div>
@@ -603,10 +523,9 @@ body {
 <!-- ══ MAIN ═══════════════════════════════════════════════ -->
 <div id="screen-main" class="screen">
 
-  <!-- Top bar -->
   <div class="topbar">
     <span class="app-title">Nido</span>
-    <button class="prop-pill">
+    <button class="prop-pill" onclick="switchPanel('properties')">
       <span class="prop-pill-dot"></span>
       Dpto 3B — Palermo ▾
     </button>
@@ -620,44 +539,82 @@ body {
     </button>
   </div>
 
-  <!-- Scroll panels -->
   <div class="panels-wrap">
 
     <!-- ── HOME ─────────────────────────────────────────── -->
     <div id="panel-home" class="panel active">
 
-      <!-- Alert strip (toggle con el botón stats) -->
       <div class="alert-strip hidden" id="alertStrip">
-        <span class="alert-strip-icon">🚨</span>
-        Puerta de entrada abierta hace 8 minutos
+        <span style="font-size:16px;flex-shrink:0">🚨</span>
+        <span class="alert-strip-text">Puerta abierta hace 8 minutos</span>
+        <button class="alert-dismiss" onclick="dismissAlert()">×</button>
       </div>
 
       <!-- Lock hero -->
       <div class="lock-section">
         <div class="lock-ring" id="lockRing">
+
+          <!-- Countdown arc -->
+          <svg class="countdown-svg" id="countdownSvg" viewBox="0 0 196 196">
+            <circle id="countdownCircle" cx="98" cy="98" r="90"/>
+          </svg>
+
           <div class="lock-pulse"></div>
+
           <button class="lock-btn-main" id="lockBtn" onclick="toggleLock()">
-            <span class="lock-btn-icon" id="lockIcon">🔒</span>
+            <div class="lock-icon-wrap">
+              <!-- Locked (gray) -->
+              <svg class="lock-icon lock-icon-locked" width="52" height="52" viewBox="0 0 52 52" fill="none">
+                <path d="M15.5 22V15a10.5 10.5 0 0 1 21 0v7"
+                      stroke="#8E8E93" stroke-width="3"
+                      stroke-linecap="round" stroke-linejoin="round"/>
+                <rect x="9" y="22" width="34" height="24" rx="6"
+                      stroke="#8E8E93" stroke-width="2.5"
+                      fill="rgba(142,142,147,0.07)"/>
+                <circle cx="26" cy="33" r="3.5" fill="#8E8E93"/>
+                <rect x="24.5" y="33" width="3" height="5" rx="1.5" fill="#8E8E93"/>
+              </svg>
+              <!-- Open (green) — right arm inserted, left arm lifted -->
+              <svg class="lock-icon lock-icon-open" width="52" height="52" viewBox="0 0 52 52" fill="none">
+                <path d="M36.5 22V15a10.5 10.5 0 0 0-21 0v-5"
+                      stroke="#34C759" stroke-width="3"
+                      stroke-linecap="round" stroke-linejoin="round"/>
+                <rect x="9" y="22" width="34" height="24" rx="6"
+                      stroke="#34C759" stroke-width="2.5"
+                      fill="rgba(52,199,89,0.07)"/>
+                <circle cx="26" cy="33" r="3.5" fill="#34C759"/>
+                <rect x="24.5" y="33" width="3" height="5" rx="1.5" fill="#34C759"/>
+              </svg>
+            </div>
             <span class="lock-btn-label" id="lockLabel">Bloqueado</span>
           </button>
         </div>
 
         <div class="lock-sub-row">
           <button class="lock-sub-btn" onclick="pulseOpen()">
-            ⚡ Abrir rápido
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+            </svg>
+            Abrir rápido
           </button>
           <button class="lock-sub-btn" onclick="toggleAlert()">
-            🔔 Alertas
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+              <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+            </svg>
+            Alertas
           </button>
         </div>
       </div>
 
-      <!-- Stats row -->
+      <!-- Stats -->
       <div class="stats-row">
         <div class="stat-card">
           <div class="stat-label">Energía</div>
-          <div class="stat-value">1.2<span class="stat-unit"> kWh</span></div>
-          <div class="stat-unit" style="color:var(--green)">↓ normal</div>
+          <div class="stat-value">1.2<span style="font-size:12px;font-weight:500;color:var(--label3)"> kWh</span></div>
+          <div class="stat-trend ok">↓ normal</div>
         </div>
         <div class="stat-card">
           <div class="stat-label">Accesos</div>
@@ -666,7 +623,7 @@ body {
         </div>
         <div class="stat-card">
           <div class="stat-label">Módulo</div>
-          <div class="stat-value" style="font-size:17px;color:var(--green)">Online</div>
+          <div class="stat-value" style="font-size:16px;color:var(--green)">Online</div>
           <div class="stat-unit">hace 2 min</div>
         </div>
       </div>
@@ -676,45 +633,49 @@ body {
       <div class="sensor-grid">
         <div class="sensor-card">
           <div class="sensor-dot ok"></div>
-          <div class="sensor-icon">🚪</div>
-          <div class="sensor-info">
+          <div class="sensor-icon-wrap green">🚪</div>
+          <div>
             <div class="sensor-name">Puerta entrada</div>
             <div class="sensor-status ok">Cerrada</div>
+            <div class="sensor-time">hace 2h</div>
           </div>
         </div>
         <div class="sensor-card">
           <div class="sensor-dot ok"></div>
-          <div class="sensor-icon">🪟</div>
-          <div class="sensor-info">
+          <div class="sensor-icon-wrap blue">🪟</div>
+          <div>
             <div class="sensor-name">Ventana</div>
             <div class="sensor-status ok">Cerrada</div>
+            <div class="sensor-time">hace 5h</div>
           </div>
         </div>
         <div class="sensor-card">
           <div class="sensor-dot ok"></div>
-          <div class="sensor-icon">🔥</div>
-          <div class="sensor-info">
-            <div class="sensor-name">Humo</div>
+          <div class="sensor-icon-wrap orange">🔥</div>
+          <div>
+            <div class="sensor-name">Detector humo</div>
             <div class="sensor-status ok">Normal</div>
+            <div class="sensor-time">actualizado</div>
           </div>
         </div>
         <div class="sensor-card">
           <div class="sensor-dot ok"></div>
-          <div class="sensor-icon">💧</div>
-          <div class="sensor-info">
-            <div class="sensor-name">Agua</div>
+          <div class="sensor-icon-wrap purple">💧</div>
+          <div>
+            <div class="sensor-name">Sensor agua</div>
             <div class="sensor-status ok">Normal</div>
+            <div class="sensor-time">actualizado</div>
           </div>
         </div>
       </div>
 
-      <!-- Energy -->
+      <!-- Energy zones -->
       <div class="section-label">Energía</div>
       <div class="energy-card">
         <div class="energy-icon">⚡</div>
         <div class="energy-info">
           <div class="energy-title">Control de zonas</div>
-          <div class="energy-sub">Dpto 3B — Palermo</div>
+          <div class="energy-sub">Dpto 3B · 1.2 kWh hoy</div>
         </div>
         <div class="energy-toggles">
           <div class="energy-row">
@@ -722,19 +683,18 @@ body {
               <input type="checkbox" checked>
               <div class="mini-track"></div>
             </label>
-            Zona 1
+            <span class="energy-row-label">Zona 1</span>
           </div>
           <div class="energy-row">
             <label class="mini-toggle">
               <input type="checkbox">
               <div class="mini-track"></div>
             </label>
-            Aire
+            <span class="energy-row-label">Aire</span>
           </div>
         </div>
       </div>
       <div style="height:16px"></div>
-
     </div>
 
     <!-- ── INQUILINO ──────────────────────────────────── -->
@@ -766,7 +726,7 @@ body {
           <div class="row-ico orange">⚡</div>
           <div class="row-text">
             <div class="row-main">Control de energía</div>
-            <div class="row-hint">Puede encender/apagar zonas</div>
+            <div class="row-hint">Puede encender zonas</div>
           </div>
           <label class="mini-toggle">
             <input type="checkbox">
@@ -777,7 +737,7 @@ body {
           <div class="row-ico blue">📊</div>
           <div class="row-text">
             <div class="row-main">Ver historial</div>
-            <div class="row-hint">Accede al registro de eventos</div>
+            <div class="row-hint">Accede al registro</div>
           </div>
           <label class="mini-toggle">
             <input type="checkbox" checked>
@@ -799,6 +759,7 @@ body {
           <div class="row-ico purple">🕐</div>
           <div class="row-text">
             <div class="row-main">Acceso temporal (1 hora)</div>
+            <div class="row-hint">Habilita acceso por 60 min</div>
           </div>
           <span class="row-chevron">›</span>
         </div>
@@ -811,54 +772,84 @@ body {
           <span class="row-chevron">›</span>
         </div>
       </div>
-      <div style="height:16px"></div>
 
+      <div class="section-label">Contrato</div>
+      <div class="list-card">
+        <div class="list-row">
+          <div class="row-ico blue">📅</div>
+          <div class="row-text"><div class="row-main">Inicio</div></div>
+          <span class="row-right">01 ene 2025</span>
+        </div>
+        <div class="list-row">
+          <div class="row-ico orange">📅</div>
+          <div class="row-text"><div class="row-main">Vencimiento</div></div>
+          <span class="row-right" style="color:var(--orange)">31 dic 2025</span>
+        </div>
+        <div class="list-row">
+          <div class="row-ico green">💵</div>
+          <div class="row-text"><div class="row-main">Alquiler mensual</div></div>
+          <span class="row-right ok">$180.000</span>
+        </div>
+      </div>
+      <div style="height:16px"></div>
     </div>
 
     <!-- ── HISTORIAL ──────────────────────────────────── -->
     <div id="panel-history" class="panel">
-      <div class="section-label" style="margin-top:16px">Últimas 24 horas</div>
+
+      <div class="history-day">Hoy</div>
       <div class="list-card">
         <div class="timeline-item">
-          <div class="timeline-icon" style="background:rgba(52,199,89,0.12)">🔓</div>
+          <div class="timeline-icon" style="background:rgba(52,199,89,.12)">🔓</div>
           <div class="timeline-body">
             <div class="timeline-title">Puerta abierta</div>
-            <div class="timeline-time">Hoy, 14:32 · Cerradura app</div>
+            <div class="timeline-time">14:32 · App</div>
           </div>
         </div>
         <div class="timeline-item">
-          <div class="timeline-icon" style="background:rgba(0,122,255,0.10)">🚪</div>
+          <div class="timeline-icon" style="background:rgba(0,122,255,.10)">🔒</div>
           <div class="timeline-body">
-            <div class="timeline-title">Puerta cerrada</div>
-            <div class="timeline-time">Hoy, 14:33</div>
+            <div class="timeline-title">Puerta cerrada (auto)</div>
+            <div class="timeline-time">14:33 · 30s auto-bloqueo</div>
           </div>
         </div>
         <div class="timeline-item">
-          <div class="timeline-icon" style="background:rgba(52,199,89,0.12)">🔓</div>
+          <div class="timeline-icon" style="background:rgba(52,199,89,.12)">🔓</div>
           <div class="timeline-body">
             <div class="timeline-title">Puerta abierta</div>
-            <div class="timeline-time">Hoy, 08:15 · Cerradura app</div>
+            <div class="timeline-time">08:15 · App</div>
           </div>
         </div>
         <div class="timeline-item">
-          <div class="timeline-icon" style="background:rgba(255,149,0,0.12)">⚡</div>
+          <div class="timeline-icon" style="background:rgba(255,149,0,.12)">⚡</div>
           <div class="timeline-body">
             <div class="timeline-title">Energía zona 1 — encendida</div>
-            <div class="timeline-time">Hoy, 07:00 · Automático</div>
+            <div class="timeline-time">07:00 · Automático</div>
           </div>
         </div>
+      </div>
+
+      <div class="history-day">Ayer</div>
+      <div class="list-card">
         <div class="timeline-item">
-          <div class="timeline-icon" style="background:rgba(255,149,0,0.12)">⚡</div>
+          <div class="timeline-icon" style="background:rgba(255,149,0,.12)">⚡</div>
           <div class="timeline-body">
             <div class="timeline-title">Energía zona 1 — apagada</div>
-            <div class="timeline-time">Ayer, 23:01 · Automático</div>
+            <div class="timeline-time">23:01 · Automático</div>
           </div>
         </div>
         <div class="timeline-item">
-          <div class="timeline-icon" style="background:rgba(52,199,89,0.12)">🔓</div>
+          <div class="timeline-icon" style="background:rgba(52,199,89,.12)">🔓</div>
           <div class="timeline-body">
             <div class="timeline-title">Puerta abierta</div>
-            <div class="timeline-time">Ayer, 19:45 · Cerradura app</div>
+            <div class="timeline-time">19:45 · App</div>
+          </div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-icon" style="background:rgba(52,199,89,.12)">🔓</div>
+          <div class="timeline-body">
+            <div class="timeline-title">Puerta abierta</div>
+            <div class="timeline-time">08:22 · App</div>
           </div>
         </div>
       </div>
@@ -887,7 +878,7 @@ body {
         <div class="prop-status-dot orange"></div>
       </div>
 
-      <div class="prop-card" style="opacity:0.55">
+      <div class="prop-card" style="opacity:.55">
         <div class="prop-thumb gray">🏗️</div>
         <div class="prop-info">
           <div class="prop-name">Local — Microcentro</div>
@@ -907,19 +898,50 @@ body {
   <!-- Tab bar -->
   <div class="tabbar">
     <button class="tab active" id="tab-home" onclick="switchPanel('home')">
-      <span class="tab-ico">🏠</span>
+      <span class="tab-ico">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="1.8"
+             stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+          <path d="M9 22V12h6v10"/>
+        </svg>
+      </span>
       <span class="tab-lbl">Inicio</span>
     </button>
+
     <button class="tab" id="tab-tenant" onclick="switchPanel('tenant')">
-      <span class="tab-ico">👤</span>
+      <span class="tab-ico">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+          <circle cx="12" cy="8" r="4"/>
+          <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+        </svg>
+      </span>
       <span class="tab-lbl">Inquilino</span>
     </button>
+
     <button class="tab" id="tab-history" onclick="switchPanel('history')">
-      <span class="tab-ico">📋</span>
+      <span class="tab-ico">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+          <circle cx="12" cy="12" r="9"/>
+          <path d="M12 7v5l3 3"/>
+        </svg>
+      </span>
       <span class="tab-lbl">Historial</span>
     </button>
+
     <button class="tab" id="tab-properties" onclick="switchPanel('properties')">
-      <span class="tab-ico">🏘️</span>
+      <span class="tab-ico">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="1.8"
+             stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3"  y="3"  width="8" height="8" rx="2"/>
+          <rect x="13" y="3"  width="8" height="8" rx="2"/>
+          <rect x="3"  y="13" width="8" height="8" rx="2"/>
+          <rect x="13" y="13" width="8" height="8" rx="2"/>
+        </svg>
+      </span>
       <span class="tab-lbl">Propiedades</span>
     </button>
   </div>
@@ -928,6 +950,9 @@ body {
 
 <script>
 /* ── Navigation ──────────────────────────────────────── */
+const panelOrder = ['home','tenant','history','properties'];
+let currentPanelIdx = 0;
+
 function showMain() {
   document.getElementById('screen-login').classList.remove('active');
   document.getElementById('screen-main').classList.add('active');
@@ -937,53 +962,101 @@ function showLogin() {
   document.getElementById('screen-login').classList.add('active');
 }
 function switchPanel(name) {
-  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  const newIdx = panelOrder.indexOf(name);
+  if (newIdx === currentPanelIdx) return;
+
+  const slideIn = newIdx > currentPanelIdx ? 'slide-right' : 'slide-left';
+  document.querySelectorAll('.panel').forEach(p =>
+    p.classList.remove('active','slide-right','slide-left'));
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.getElementById('panel-' + name).classList.add('active');
+
+  const p = document.getElementById('panel-' + name);
+  p.classList.add('active', slideIn);
   document.getElementById('tab-' + name).classList.add('active');
   document.querySelector('.panels-wrap').scrollTop = 0;
+  currentPanelIdx = newIdx;
 }
 
 /* ── Lock ────────────────────────────────────────────── */
 let locked = true;
-function toggleLock() {
-  locked = !locked;
+let autoLockTimer = null;
+let countdownInterval = null;
+const CIRC = 565; // 2π × 90
+
+function setLocked(val) {
+  locked = val;
   const btn  = document.getElementById('lockBtn');
-  const icon = document.getElementById('lockIcon');
   const lbl  = document.getElementById('lockLabel');
   const ring = document.getElementById('lockRing');
   if (!locked) {
     btn.classList.add('unlocked');
     ring.classList.add('unlocked');
-    icon.textContent = '🔓';
-    lbl.textContent  = 'Abierto';
-    setTimeout(() => {
-      locked = true;
-      btn.classList.remove('unlocked');
-      ring.classList.remove('unlocked');
-      icon.textContent = '🔒';
-      lbl.textContent  = 'Bloqueado';
-    }, 4000);
+    btn.classList.remove('bounce');
+    void btn.offsetWidth;
+    btn.classList.add('bounce');
+  } else {
+    btn.classList.remove('unlocked','bounce');
+    ring.classList.remove('unlocked');
+    lbl.textContent = 'Bloqueado';
+    stopCountdown();
   }
 }
 
-function pulseOpen() {
-  locked = false;
-  const btn  = document.getElementById('lockBtn');
-  const icon = document.getElementById('lockIcon');
-  const lbl  = document.getElementById('lockLabel');
-  const ring = document.getElementById('lockRing');
-  btn.classList.add('unlocked');
-  ring.classList.add('unlocked');
-  icon.textContent = '🔓';
-  lbl.textContent  = 'Abierto';
-  setTimeout(() => {
-    locked = true;
-    btn.classList.remove('unlocked');
-    ring.classList.remove('unlocked');
-    icon.textContent = '🔒';
-    lbl.textContent  = 'Bloqueado';
-  }, 3000);
+function toggleLock() {
+  if (!locked) {
+    clearAutoLock();
+    setLocked(true);
+    return;
+  }
+  openLock(4000);
+}
+
+function openLock(ms) {
+  clearAutoLock();
+  setLocked(false);
+  startCountdown(ms);
+  autoLockTimer = setTimeout(() => setLocked(true), ms);
+}
+
+function pulseOpen() { openLock(3000); }
+
+function clearAutoLock() {
+  if (autoLockTimer) { clearTimeout(autoLockTimer); autoLockTimer = null; }
+  stopCountdown();
+}
+
+/* ── Countdown arc ────────────────────────────────────── */
+function startCountdown(ms) {
+  const svg    = document.getElementById('countdownSvg');
+  const circle = document.getElementById('countdownCircle');
+  const lbl    = document.getElementById('lockLabel');
+
+  circle.style.transition   = 'none';
+  circle.style.strokeDashoffset = '0';
+  svg.classList.add('visible');
+
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    circle.style.transition = `stroke-dashoffset ${ms}ms linear`;
+    circle.style.strokeDashoffset = CIRC;
+  }));
+
+  let secs = Math.round(ms / 1000);
+  lbl.textContent = secs + 's';
+  if (countdownInterval) clearInterval(countdownInterval);
+  countdownInterval = setInterval(() => {
+    secs--;
+    if (secs <= 0) { clearInterval(countdownInterval); countdownInterval = null; }
+    else lbl.textContent = secs + 's';
+  }, 1000);
+}
+
+function stopCountdown() {
+  if (countdownInterval) { clearInterval(countdownInterval); countdownInterval = null; }
+  const svg    = document.getElementById('countdownSvg');
+  const circle = document.getElementById('countdownCircle');
+  svg.classList.remove('visible');
+  circle.style.transition = 'none';
+  circle.style.strokeDashoffset = CIRC;
 }
 
 /* ── Alert ───────────────────────────────────────────── */
@@ -991,6 +1064,10 @@ let alertOn = false;
 function toggleAlert() {
   alertOn = !alertOn;
   document.getElementById('alertStrip').classList.toggle('hidden', !alertOn);
+}
+function dismissAlert() {
+  alertOn = false;
+  document.getElementById('alertStrip').classList.add('hidden');
 }
 </script>
 </body>
