@@ -142,12 +142,18 @@ void pubAllStates() {
 // ==========================================================
 
 void publishDiscovery() {
-    char topic[128], payload[512];
+    char topic[128], payload[620];
 
-    // Relés → switch
+    // Dominios HA según tipo de dispositivo → HomeKit muestra ícono correcto
+    // switch → interruptor  light → lámpara  fan → ventilador
+    static const char* HA_DOMAINS[] = { "switch", "light", "fan" };
+
+    // Relés
     for (int i = 1; i <= cfg.relayCount; i++) {
+        uint8_t ht = cfg.relay[i - 1].haType;
+        if (ht > 2) ht = 0;
         snprintf(topic, sizeof(topic),
-            "homeassistant/switch/%s_relay_%d/config", cfg.deviceId, i);
+            "homeassistant/%s/%s_relay_%d/config", HA_DOMAINS[ht], cfg.deviceId, i);
         snprintf(payload, sizeof(payload),
             "{"
             "\"name\":\"%s\","
@@ -157,6 +163,7 @@ void publishDiscovery() {
             "\"pl_on\":\"ON\","
             "\"pl_off\":\"OFF\","
             "\"ret\":true,"
+            "\"suggested_area\":\"%s\","
             "\"avty_t\":\"%s\","
             "\"pl_avail\":\"online\","
             "\"pl_not_avail\":\"offline\","
@@ -167,6 +174,7 @@ void publishDiscovery() {
             cfg.deviceId, i,
             tRelaySet,   i,
             tRelayState, i,
+            cfg.area,
             tStatus,
             cfg.deviceId, cfg.deviceName);
         mqtt.publish(topic, payload, true);
@@ -187,6 +195,7 @@ void publishDiscovery() {
                 "\"stat_t\":\"%s/%d/state\","
                 "\"pl_on\":\"ON\",\"pl_off\":\"OFF\","
                 "\"dev_cla\":\"%s\","
+                "\"suggested_area\":\"%s\","
                 "\"avty_t\":\"%s\","
                 "\"pl_avail\":\"online\","
                 "\"pl_not_avail\":\"offline\","
@@ -197,6 +206,7 @@ void publishDiscovery() {
                 cfg.deviceId, i,
                 tInputState, i,
                 hac,
+                cfg.area,
                 tStatus,
                 cfg.deviceId, cfg.deviceName);
         } else {
@@ -206,6 +216,7 @@ void publishDiscovery() {
                 "\"uniq_id\":\"%s_i%d\","
                 "\"stat_t\":\"%s/%d/state\","
                 "\"pl_on\":\"ON\",\"pl_off\":\"OFF\","
+                "\"suggested_area\":\"%s\","
                 "\"avty_t\":\"%s\","
                 "\"pl_avail\":\"online\","
                 "\"pl_not_avail\":\"offline\","
@@ -215,6 +226,7 @@ void publishDiscovery() {
                 cfg.input[i - 1].name,
                 cfg.deviceId, i,
                 tInputState, i,
+                cfg.area,
                 tStatus,
                 cfg.deviceId, cfg.deviceName);
         }

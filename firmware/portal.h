@@ -112,6 +112,7 @@ static const char PORTAL_HTML[] PROGMEM = R"rawhtml(
         <div class="field"><label>Nombre visible</label><input type="text" name="deviceName" id="deviceName" maxlength="48" required placeholder="Módulo 01"></div>
       </div>
       <div class="field"><label>Contraseña OTA</label><input type="password" name="otaPass" id="otaPass" maxlength="32" placeholder="esp32ota"><p class="hint">Para actualizaciones por WiFi</p></div>
+      <div class="field"><label>Habitación / Área</label><input type="text" name="area" id="area" maxlength="23" placeholder="Living"><p class="hint">Agrupa este módulo en la app Casa de Apple (Siri)</p></div>
       <div class="row2">
         <div class="field">
           <label>Cantidad de relés</label>
@@ -156,10 +157,12 @@ static const char PORTAL_HTML[] PROGMEM = R"rawhtml(
 </div>
 
 <script>
-const HA_CLASSES = ["door","window","motion","smoke","moisture","vibration","None","garage_door"];
-const HA_LABELS  = ["Puerta","Ventana","Movimiento","Humo","Agua/Humedad","Vibración","Genérico","Portón garaje"];
-const MODES      = ["switch","pulse","timer"];
-const MODE_LABELS= ["Switch (ON/OFF)","Pulso momentáneo","Temporizador"];
+const HA_CLASSES    = ["door","window","motion","smoke","moisture","vibration","None","garage_door"];
+const HA_LABELS     = ["Puerta","Ventana","Movimiento","Humo","Agua/Humedad","Vibración","Genérico","Portón garaje"];
+const MODES         = ["switch","pulse","timer"];
+const MODE_LABELS   = ["Switch (ON/OFF)","Pulso momentáneo","Temporizador"];
+const HA_TYPES      = [0,1,2];
+const HA_TYPE_LABELS= ["Interruptor","Luz 💡","Ventilador"];
 
 // Prefill from current config injected by server
 const CFG = JSON.parse(document.getElementById('cfgData')?.textContent||'{}');
@@ -180,14 +183,22 @@ function buildChannels() {
   rg.innerHTML = '';
   for(let i=0;i<rc;i++){
     const r = CFG.relay?.[i]||{};
-    const name = r.name||('Relé '+(i+1));
-    const mode = r.mode||0;
-    const ms   = r.pulseMs||500;
+    const name   = r.name||('Relé '+(i+1));
+    const mode   = r.mode||0;
+    const ms     = r.pulseMs||500;
+    const haType = r.haType||0;
     rg.innerHTML += `
     <div class="ch-card">
       <h3>Relé ${i+1}</h3>
-      <div class="field"><label>Nombre</label>
-        <input type="text" name="rname${i}" maxlength="23" value="${esc(name)}">
+      <div class="row2">
+        <div class="field"><label>Nombre</label>
+          <input type="text" name="rname${i}" maxlength="23" value="${esc(name)}">
+        </div>
+        <div class="field"><label>Tipo (HomeKit)</label>
+          <select name="rtype${i}">
+            ${HA_TYPE_LABELS.map((l,j)=>`<option value="${j}"${j==haType?' selected':''}>${l}</option>`).join('')}
+          </select>
+        </div>
       </div>
       <div class="row2">
         <div class="field"><label>Modo</label>
@@ -251,6 +262,7 @@ function prefill(){
   if(CFG.mqttUser)   f('mqttUser').value   = CFG.mqttUser;
   if(CFG.deviceId)   f('deviceId').value   = CFG.deviceId;
   if(CFG.deviceName) f('deviceName').value = CFG.deviceName;
+  if(CFG.area)       f('area').value       = CFG.area;
   if(CFG.relayCount!=null) f('relayCount').value = CFG.relayCount;
   if(CFG.inputCount!=null) f('inputCount').value = CFG.inputCount;
 }
@@ -297,12 +309,14 @@ static String buildConfigJson() {
     j += "\"deviceName\":\"";j += cfg.deviceName; j += "\",";
     j += "\"relayCount\":";  j += cfg.relayCount; j += ",";
     j += "\"inputCount\":";  j += cfg.inputCount; j += ",";
+    j += "\"area\":\"";      j += cfg.area;       j += "\",";
     j += "\"relay\":[";
     for (int i = 0; i < RELAY_MAX; i++) {
         if (i) j += ",";
-        j += "{\"name\":\""; j += cfg.relay[i].name; j += "\",";
-        j += "\"mode\":";    j += cfg.relay[i].mode;
-        j += ",\"pulseMs\":"; j += cfg.relay[i].pulseMs; j += "}";
+        j += "{\"name\":\"";   j += cfg.relay[i].name;    j += "\",";
+        j += "\"mode\":";      j += cfg.relay[i].mode;    j += ",";
+        j += "\"pulseMs\":";   j += cfg.relay[i].pulseMs; j += ",";
+        j += "\"haType\":";    j += cfg.relay[i].haType;  j += "}";
     }
     j += "],\"input\":[";
     for (int i = 0; i < INPUT_MAX; i++) {
@@ -352,6 +366,7 @@ static void handleSave() {
     strlcpy(cfg.deviceId,   argOrDefault("deviceId","modulo_01").c_str(), sizeof(cfg.deviceId));
     strlcpy(cfg.deviceName, argOrDefault("deviceName","Módulo 01").c_str(), sizeof(cfg.deviceName));
     strlcpy(cfg.otaPass,    argOrDefault("otaPass","esp32ota").c_str(), sizeof(cfg.otaPass));
+    strlcpy(cfg.area,       argOrDefault("area","General").c_str(), sizeof(cfg.area));
 
     uint8_t rc = (uint8_t)constrain(argOrDefault("relayCount","4").toInt(), 0, RELAY_MAX);
     uint8_t ic = (uint8_t)constrain(argOrDefault("inputCount","8").toInt(), 0, INPUT_MAX);
@@ -364,6 +379,7 @@ static void handleSave() {
         strlcpy(cfg.relay[i].name, argOrDefault(pfx, ("Relé " + String(i+1))).c_str(), sizeof(cfg.relay[i].name));
         cfg.relay[i].mode    = (uint8_t)constrain(argOrDefault("rmode"+String(i),"0").toInt(), 0, 2);
         cfg.relay[i].pulseMs = (uint16_t)constrain(argOrDefault("rpms"+String(i),"500").toInt(), 50, 60000);
+        cfg.relay[i].haType  = (uint8_t)constrain(argOrDefault("rtype"+String(i),"0").toInt(), 0, 2);
     }
 
     // Entradas

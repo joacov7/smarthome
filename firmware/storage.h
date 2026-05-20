@@ -13,6 +13,12 @@
 #define MODE_PULSE   1   // pulso momentáneo → útil para portones, timbres
 #define MODE_TIMER   2   // temporizador → útil para riego, ventilación
 
+// Tipos de dispositivo HA para relés
+// Determina el ícono y la categoría en HomeKit / Siri
+#define HA_RELAY_SWITCH  0   // interruptor genérico
+#define HA_RELAY_LIGHT   1   // lámpara → "Siri, apagá las luces del living"
+#define HA_RELAY_FAN     2   // ventilador
+
 // Clases de HA para binary_sensor
 #define HA_CLASSES_COUNT 8
 const char* HA_CLASSES[HA_CLASSES_COUNT] = {
@@ -25,9 +31,10 @@ const char* HA_CLASSES_LABEL[HA_CLASSES_COUNT] = {
 };
 
 struct RelayConfig {
-    char    name[24];
-    uint8_t mode;       // MODE_SWITCH / MODE_PULSE / MODE_TIMER
+    char     name[24];
+    uint8_t  mode;      // MODE_SWITCH / MODE_PULSE / MODE_TIMER
     uint16_t pulseMs;   // duración en ms (para PULSE y TIMER)
+    uint8_t  haType;    // HA_RELAY_SWITCH / LIGHT / FAN
 };
 
 struct InputConfig {
@@ -60,6 +67,9 @@ struct Config {
     RelayConfig relay[RELAY_MAX];
     InputConfig input[INPUT_MAX];
 
+    // ── HomeKit / HA ───────────────────────────────────────
+    char area[24];      // habitación → agrupa dispositivos en la app Casa
+
     // ── Flags ──────────────────────────────────────────────
     bool configured;    // false = mostrar portal en próximo arranque
 };
@@ -80,6 +90,7 @@ void configDefaults() {
     strlcpy(cfg.deviceId,   "modulo_01",     sizeof(cfg.deviceId));
     strlcpy(cfg.deviceName, "Módulo 01",     sizeof(cfg.deviceName));
     strlcpy(cfg.otaPass,    "esp32ota",      sizeof(cfg.otaPass));
+    strlcpy(cfg.area,       "General",       sizeof(cfg.area));
     cfg.relayCount = 4;
     cfg.inputCount = 8;
 
@@ -89,6 +100,7 @@ void configDefaults() {
         strlcpy(cfg.relay[i].name, relayNames[i], sizeof(cfg.relay[i].name));
         cfg.relay[i].mode    = MODE_SWITCH;
         cfg.relay[i].pulseMs = 500;
+        cfg.relay[i].haType  = HA_RELAY_SWITCH;
     }
     const char* inputNames[] = {
         "Entrada 1", "Entrada 2", "Entrada 3", "Entrada 4",
@@ -120,10 +132,11 @@ void configLoad() {
     p.getBytes("devid",  &cfg.deviceId,   sizeof(cfg.deviceId));
     p.getBytes("devnm",  &cfg.deviceName, sizeof(cfg.deviceName));
     p.getBytes("otapw",  &cfg.otaPass,    sizeof(cfg.otaPass));
+    p.getBytes("area",   &cfg.area,       sizeof(cfg.area));
     cfg.relayCount = p.getUChar("rcnt",   4);
     cfg.inputCount = p.getUChar("icnt",   8);
-    p.getBytes("relays", cfg.relay,       sizeof(cfg.relay));
-    p.getBytes("inputs", cfg.input,       sizeof(cfg.input));
+    p.getBytes("relays2", cfg.relay,      sizeof(cfg.relay));  // v2: incluye haType
+    p.getBytes("inputs",  cfg.input,      sizeof(cfg.input));
     cfg.configured = true;
     p.end();
 }
@@ -143,10 +156,11 @@ void configSave() {
     p.putBytes("devid",  &cfg.deviceId,   sizeof(cfg.deviceId));
     p.putBytes("devnm",  &cfg.deviceName, sizeof(cfg.deviceName));
     p.putBytes("otapw",  &cfg.otaPass,    sizeof(cfg.otaPass));
+    p.putBytes("area",   &cfg.area,       sizeof(cfg.area));
     p.putUChar("rcnt",   cfg.relayCount);
     p.putUChar("icnt",   cfg.inputCount);
-    p.putBytes("relays", cfg.relay,       sizeof(cfg.relay));
-    p.putBytes("inputs", cfg.input,       sizeof(cfg.input));
+    p.putBytes("relays2", cfg.relay,      sizeof(cfg.relay));  // v2: incluye haType
+    p.putBytes("inputs",  cfg.input,      sizeof(cfg.input));
     p.putBool("cfgd",    true);
     p.end();
     cfg.configured = true;
