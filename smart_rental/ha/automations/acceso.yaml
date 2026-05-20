@@ -1,0 +1,117 @@
+##############################################################
+#  SMART RENTAL — Automatizaciones de Acceso
+##############################################################
+
+# ── Auto-bloqueo ───────────────────────────────────────────
+
+- id: rental_auto_bloqueo
+  alias: "Smart Rental — Auto-bloqueo cerradura"
+  description: Bloquea la cerradura automáticamente 30s después de abrir
+  trigger:
+    - platform: state
+      entity_id: switch.cerradura_entrada
+      to: "on"
+      for:
+        seconds: 30
+  action:
+    - service: switch.turn_off
+      target:
+        entity_id: switch.cerradura_entrada
+  mode: restart
+
+# ── Baja de inquilino ──────────────────────────────────────
+
+- id: rental_baja_inquilino
+  alias: "Smart Rental — Proceso de baja de inquilino"
+  trigger:
+    - platform: state
+      entity_id: input_boolean.inquilino_activo
+      to: "off"
+  action:
+    - service: switch.turn_off
+      target:
+        entity_id:
+          - switch.energia_zona_1
+          - switch.energia_zona_2
+    - service: switch.turn_off
+      target:
+        entity_id: switch.cerradura_entrada
+    - service: notify.propietario
+      data:
+        title: "✅ Inquilino dado de baja"
+        message: >
+          Energía cortada. Cerradura bloqueada.
+          La propiedad quedó en modo desocupado.
+    - service: input_text.set_value
+      target:
+        entity_id: input_text.nombre_inquilino
+      data:
+        value: "—"
+    - service: input_text.set_value
+      target:
+        entity_id: input_text.telefono_inquilino
+      data:
+        value: "—"
+  mode: single
+
+# ── Alta de inquilino ──────────────────────────────────────
+
+- id: rental_alta_inquilino
+  alias: "Smart Rental — Proceso de alta de inquilino"
+  trigger:
+    - platform: state
+      entity_id: input_boolean.inquilino_activo
+      to: "on"
+  action:
+    - service: switch.turn_on
+      target:
+        entity_id:
+          - switch.energia_zona_1
+          - switch.energia_zona_2
+    - service: notify.propietario
+      data:
+        title: "👤 Nuevo inquilino activo"
+        message: >
+          Energía activada.
+          Inquilino: {{ states('input_text.nombre_inquilino') }}.
+  mode: single
+
+# ── Modo noche / desocupado ────────────────────────────────
+
+- id: rental_modo_desocupado_noche
+  alias: "Smart Rental — Corte automático 23hs (desocupado)"
+  description: Si no hay inquilino, cortar energía a las 23hs
+  trigger:
+    - platform: time
+      at: "23:00:00"
+  condition:
+    - condition: state
+      entity_id: input_boolean.inquilino_activo
+      state: "off"
+  action:
+    - service: switch.turn_off
+      target:
+        entity_id:
+          - switch.energia_zona_1
+          - switch.energia_zona_2
+  mode: single
+
+# ── Reporte diario ─────────────────────────────────────────
+
+- id: rental_reporte_diario
+  alias: "Smart Rental — Reporte diario 8am"
+  trigger:
+    - platform: time
+      at: "08:00:00"
+  action:
+    - service: notify.propietario
+      data:
+        title: "📊 Resumen diario — Propiedad"
+        message: >
+          Estado: {{ 'Ocupada' if is_state('input_boolean.inquilino_activo', 'on') else 'Desocupada' }}
+          Inquilino: {{ states('input_text.nombre_inquilino') }}
+          Puerta: {{ 'Abierta ⚠️' if is_state('binary_sensor.puerta_entrada', 'on') else 'Cerrada ✅' }}
+          Humo: {{ '🔥 ACTIVO' if is_state('binary_sensor.detector_humo', 'on') else '✅ OK' }}
+          Agua: {{ '💧 ACTIVO' if is_state('binary_sensor.sensor_agua', 'on') else '✅ OK' }}
+          Consumo: {{ states('sensor.consumo_energia') }} W
+  mode: single

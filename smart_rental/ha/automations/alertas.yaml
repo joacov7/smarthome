@@ -1,0 +1,186 @@
+##############################################################
+#  SMART RENTAL — Automatizaciones de Alertas
+#
+#  Cómo instalar:
+#    Copiar el contenido en automations.yaml de HA
+#    o importar via HA → Ajustes → Automatizaciones → Importar YAML
+#
+#  Reemplazar:
+#    notify.propietario → tu canal de notificación
+#    (puede ser notify.mobile_app_tucelular o notify.telegram)
+##############################################################
+
+# ── Puerta de entrada ──────────────────────────────────────
+
+- id: rental_puerta_abierta_alerta
+  alias: "Smart Rental — Puerta abierta > 5 min"
+  description: Avisa al propietario si la puerta quedó abierta
+  trigger:
+    - platform: state
+      entity_id: binary_sensor.puerta_entrada
+      to: "on"
+      for:
+        minutes: 5
+  condition:
+    - condition: state
+      entity_id: input_boolean.inquilino_activo
+      state: "on"
+  action:
+    - service: notify.propietario
+      data:
+        title: "🚪 Puerta abierta"
+        message: "La puerta de entrada lleva más de 5 minutos abierta."
+        data:
+          push:
+            sound: default
+  mode: single
+
+- id: rental_puerta_fuera_horario
+  alias: "Smart Rental — Puerta abierta fuera de horario"
+  description: Alerta si alguien entra entre medianoche y 6am
+  trigger:
+    - platform: state
+      entity_id: binary_sensor.puerta_entrada
+      to: "on"
+  condition:
+    - condition: time
+      after: "00:00:00"
+      before: "06:00:00"
+  action:
+    - service: notify.propietario
+      data:
+        title: "🌙 Movimiento nocturno"
+        message: >
+          La puerta de entrada se abrió a las
+          {{ now().strftime('%H:%M') }}.
+  mode: single
+
+# ── Detector de humo ───────────────────────────────────────
+
+- id: rental_humo_detectado
+  alias: "Smart Rental — Humo detectado"
+  description: Emergencia — humo. Notifica + desbloquea puerta
+  trigger:
+    - platform: state
+      entity_id: binary_sensor.detector_humo
+      to: "on"
+  action:
+    - service: notify.propietario
+      data:
+        title: "🔥 HUMO DETECTADO"
+        message: >
+          Detector de humo activo en la propiedad.
+          Se desbloqueó la puerta de entrada automáticamente.
+        data:
+          push:
+            sound: "US-EN-Morgan-Freeman-Vacate-The-Premises.wav"
+    - service: switch.turn_on
+      target:
+        entity_id: switch.cerradura_entrada
+    - service: persistent_notification.create
+      data:
+        title: "🔥 EMERGENCIA — HUMO"
+        message: "Detector activo. Puerta desbloqueada automáticamente."
+        notification_id: smoke_alert
+  mode: single
+
+- id: rental_humo_resuelto
+  alias: "Smart Rental — Humo resuelto"
+  trigger:
+    - platform: state
+      entity_id: binary_sensor.detector_humo
+      to: "off"
+      for:
+        minutes: 2
+  action:
+    - service: notify.propietario
+      data:
+        title: "✅ Humo despejado"
+        message: "El detector de humo volvió a estado normal."
+    - service: persistent_notification.dismiss
+      data:
+        notification_id: smoke_alert
+  mode: single
+
+# ── Sensor de agua / pérdida ───────────────────────────────
+
+- id: rental_agua_detectada
+  alias: "Smart Rental — Pérdida de agua detectada"
+  trigger:
+    - platform: state
+      entity_id: binary_sensor.sensor_agua
+      to: "on"
+  action:
+    - service: notify.propietario
+      data:
+        title: "💧 PÉRDIDA DE AGUA"
+        message: >
+          Sensor de agua activo en la propiedad.
+          Revisá urgente — posible pérdida o inundación.
+        data:
+          push:
+            sound: default
+    - service: persistent_notification.create
+      data:
+        title: "💧 Pérdida de agua"
+        message: "Sensor activo. Verificar inmediatamente."
+        notification_id: water_alert
+  mode: single
+
+- id: rental_agua_resuelta
+  alias: "Smart Rental — Agua resuelta"
+  trigger:
+    - platform: state
+      entity_id: binary_sensor.sensor_agua
+      to: "off"
+      for:
+        minutes: 1
+  action:
+    - service: notify.propietario
+      data:
+        title: "✅ Sensor agua OK"
+        message: "El sensor de agua volvió a estado normal."
+    - service: persistent_notification.dismiss
+      data:
+        notification_id: water_alert
+  mode: single
+
+# ── Módulo offline ─────────────────────────────────────────
+
+- id: rental_modulo_offline
+  alias: "Smart Rental — Módulo sin conexión"
+  description: Avisa si el ESP32 se desconecta más de 5 min
+  trigger:
+    - platform: state
+      entity_id: switch.cerradura_entrada
+      to: "unavailable"
+      for:
+        minutes: 5
+  action:
+    - service: notify.propietario
+      data:
+        title: "📡 Módulo sin conexión"
+        message: >
+          El módulo de la propiedad no responde hace más de 5 minutos.
+          Verificar conexión WiFi o luz en el tablero.
+  mode: single
+
+# ── Consumo de energía ─────────────────────────────────────
+
+- id: rental_consumo_alto
+  alias: "Smart Rental — Consumo elevado"
+  description: Alerta si el consumo supera el umbral configurado
+  trigger:
+    - platform: numeric_state
+      entity_id: sensor.consumo_energia
+      above: 3000  # Watts — ajustar según la propiedad
+      for:
+        minutes: 30
+  action:
+    - service: notify.propietario
+      data:
+        title: "⚡ Consumo elevado"
+        message: >
+          Consumo actual: {{ states('sensor.consumo_energia') }} W.
+          Lleva más de 30 min por encima del umbral.
+  mode: single

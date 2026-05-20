@@ -1,0 +1,26 @@
+##############################################################
+#  SMART RENTAL — Helpers de HA
+#  Agregar en configuration.yaml:
+#    input_boolean: !include smart_rental/ha/input_helpers.yaml
+#    input_text: !include smart_rental/ha/input_helpers.yaml
+#
+#  O crearlos via UI: Ajustes → Dispositivos → Helpers
+##############################################################
+
+# input_boolean:
+inquilino_activo:
+  name: Inquilino activo
+  icon: mdi:account-check
+
+# input_text:
+nombre_inquilino:
+  name: Nombre del inquilino
+  icon: mdi:account
+  max: 50
+  initial: "—"
+
+telefono_inquilino:
+  name: Teléfono del inquilino
+  icon: mdi:phone
+  max: 20
+  initial: "—"

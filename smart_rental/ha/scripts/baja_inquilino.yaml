@@ -1,0 +1,56 @@
+##############################################################
+#  SMART RENTAL — Scripts reutilizables
+#  Agregar en scripts.yaml de HA
+##############################################################
+
+baja_inquilino:
+  alias: "Smart Rental — Baja de inquilino"
+  icon: mdi:account-remove
+  sequence:
+    - service: input_boolean.turn_off
+      target:
+        entity_id: input_boolean.inquilino_activo
+  mode: single
+
+abrir_cerradura:
+  alias: "Smart Rental — Abrir cerradura"
+  icon: mdi:lock-open
+  sequence:
+    - service: switch.turn_on
+      target:
+        entity_id: switch.cerradura_entrada
+    - delay:
+        seconds: 5
+    - service: switch.turn_off
+      target:
+        entity_id: switch.cerradura_entrada
+  mode: single
+
+corte_total:
+  alias: "Smart Rental — Corte total de energía"
+  icon: mdi:power-off
+  sequence:
+    - service: switch.turn_off
+      target:
+        entity_id:
+          - switch.energia_zona_1
+          - switch.energia_zona_2
+  mode: single
+
+modo_visita:
+  alias: "Smart Rental — Modo visita (acceso temporal 1h)"
+  icon: mdi:clock-time-one
+  sequence:
+    - service: switch.turn_on
+      target:
+        entity_id:
+          - switch.energia_zona_1
+          - switch.energia_zona_2
+    - delay:
+        hours: 1
+    - service: switch.turn_off
+      target:
+        entity_id:
+          - switch.energia_zona_1
+          - switch.energia_zona_2
+  mode: single
