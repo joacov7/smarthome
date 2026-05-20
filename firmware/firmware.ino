@@ -3,6 +3,7 @@
  * Hardware: Waveshare ESP32-S3 Zero
  *
  * Funcionalidades:
+ *   - Portal de configuración captivo (AP mode, primer arranque)
  *   - WiFi con reconexión automática
  *   - MQTT con reconexión automática + Last Will Testament
  *   - OTA (actualización por WiFi desde Arduino IDE)
@@ -15,6 +16,7 @@
  *   - PubSubClient   (Nick O'Leary)
  *   - Adafruit SSD1306
  *   - Adafruit GFX Library
+ *   (DNSServer, WebServer, Preferences: incluidas en ESP32 Arduino core)
  *
  * Board: "ESP32S3 Dev Module" en Arduino IDE
  * USB Mode: "USB-OTG (TinyUSB)" o "Hardware CDC and JTAG"
@@ -26,7 +28,12 @@
 #include <Wire.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
-#include "config.h"
+#include "config.h"   // pines I2C, direcciones I2C, RELAY_ACTIVE_LOW
+#include "storage.h"  // struct Config + NVS helpers
+#include "portal.h"   // captive portal AP + config web UI
+
+// ── Modo de operación ─────────────────────────────────────
+static bool portalMode = false;
 
 // ── OLED ──────────────────────────────────────────────────
 Adafruit_SSD1306 display(128, 64, &Wire, -1);
@@ -44,17 +51,21 @@ bool    relayModuleOk = false;
 bool    inputModuleOk = false;
 
 // ── Timers no bloqueantes ─────────────────────────────────
-unsigned long tInputCheck  = 0;
-unsigned long tOledUpdate  = 0;
-unsigned long tHeartbeat   = 0;
-unsigned long tReconnect   = 0;
-unsigned long tWifiCheck   = 0;
+unsigned long tInputCheck = 0;
+unsigned long tOledUpdate = 0;
+unsigned long tHeartbeat  = 0;
+unsigned long tReconnect  = 0;
+unsigned long tWifiCheck  = 0;
+
+// ── Auto-off de relés en modo PULSE / TIMER ──────────────
+// Valor: millis() cuando se debe apagar. 0 = sin pendiente.
+unsigned long relayAutoOff[RELAY_MAX] = {};
 
 // ── Topics MQTT (construidos en setup) ───────────────────
-char tRelaySet[80];   // esp32modular/{id}/relay
-char tRelayState[80]; // esp32modular/{id}/relay
-char tInputState[80]; // esp32modular/{id}/input
-char tStatus[64];     // esp32modular/{id}/status
+char tRelaySet[80];
+char tRelayState[80];
+char tInputState[80];
+char tStatus[64];
 
 // ==========================================================
 //   I2C — PCF8574 helpers
@@ -87,7 +98,7 @@ void applyRelays() {
 }
 
 void setRelay(uint8_t ch, bool on) {
-    if (ch < 1 || ch > RELAY_COUNT) return;
+    if (ch < 1 || ch > cfg.relayCount) return;
     uint8_t bit = ch - 1;
     bool active = RELAY_ACTIVE_LOW ? !on : on;
     if (active) relayState |=  (1 << bit);
@@ -96,17 +107,10 @@ void setRelay(uint8_t ch, bool on) {
 }
 
 bool getRelay(uint8_t ch) {
-    if (ch < 1 || ch > RELAY_COUNT) return false;
+    if (ch < 1 || ch > cfg.relayCount) return false;
     uint8_t bit = ch - 1;
     bool active = relayState & (1 << bit);
     return RELAY_ACTIVE_LOW ? !active : active;
-}
-
-// Pulso momentáneo — útil para portones, timbres, etc.
-void pulseRelay(uint8_t ch, uint16_t ms = 500) {
-    setRelay(ch, true);
-    delay(ms);
-    setRelay(ch, false);
 }
 
 // ==========================================================
@@ -119,33 +123,34 @@ void pubRelayState(uint8_t ch) {
     mqtt.publish(topic, getRelay(ch) ? "ON" : "OFF", true);
 }
 
-void pubInputState(uint8_t ch, bool active) {
+void pubInputState(uint8_t ch, bool rawActive) {
     char topic[96];
+    // Aplicar inversión NC/NO según configuración del canal
+    bool state = cfg.input[ch - 1].inverted ? !rawActive : rawActive;
     snprintf(topic, sizeof(topic), "%s/%d/state", tInputState, ch);
-    mqtt.publish(topic, active ? "ON" : "OFF", true);
+    mqtt.publish(topic, state ? "ON" : "OFF", true);
 }
 
 void pubAllStates() {
-    for (int i = 1; i <= RELAY_COUNT; i++) pubRelayState(i);
-    for (int i = 1; i <= INPUT_COUNT; i++)
+    for (int i = 1; i <= cfg.relayCount; i++) pubRelayState(i);
+    for (int i = 1; i <= cfg.inputCount; i++)
         pubInputState(i, !(inputState & (1 << (i - 1))));
 }
 
 // ==========================================================
 //   MQTT — Home Assistant Auto-Discovery
-//   Crea las entidades automáticamente en HA sin configurar nada
 // ==========================================================
 
 void publishDiscovery() {
     char topic[128], payload[512];
 
     // Relés → switch
-    for (int i = 1; i <= RELAY_COUNT; i++) {
+    for (int i = 1; i <= cfg.relayCount; i++) {
         snprintf(topic, sizeof(topic),
-            "homeassistant/switch/%s_relay_%d/config", DEVICE_ID, i);
+            "homeassistant/switch/%s_relay_%d/config", cfg.deviceId, i);
         snprintf(payload, sizeof(payload),
             "{"
-            "\"name\":\"Relay %d\","
+            "\"name\":\"%s\","
             "\"uniq_id\":\"%s_r%d\","
             "\"cmd_t\":\"%s/%d/set\","
             "\"stat_t\":\"%s/%d/state\","
@@ -155,57 +160,64 @@ void publishDiscovery() {
             "\"avty_t\":\"%s\","
             "\"pl_avail\":\"online\","
             "\"pl_not_avail\":\"offline\","
-            "\"dev\":{"
-              "\"ids\":[\"%s\"],"
-              "\"name\":\"%s\","
-              "\"mf\":\"ESP32 Modular\","
-              "\"mdl\":\"CPU S3 Zero\""
-            "}"
+            "\"dev\":{\"ids\":[\"%s\"],\"name\":\"%s\","
+              "\"mf\":\"ESP32 Modular\",\"mdl\":\"CPU S3 Zero\"}"
             "}",
-            i,
-            DEVICE_ID, i,
-            tRelaySet, i,
+            cfg.relay[i - 1].name,
+            cfg.deviceId, i,
+            tRelaySet,   i,
             tRelayState, i,
             tStatus,
-            DEVICE_ID, DEVICE_NAME);
+            cfg.deviceId, cfg.deviceName);
         mqtt.publish(topic, payload, true);
         delay(20);
     }
 
     // Entradas → binary_sensor
-    // device_class sugerido: "door" para puertas, "motion" para PIR,
-    // "window" para ventanas. Cambiar según la aplicación.
-    const char* inputClasses[] = {
-        "door", "door", "motion", "motion",
-        "window", "window", "None", "None"
-    };
-    for (int i = 1; i <= INPUT_COUNT; i++) {
+    for (int i = 1; i <= cfg.inputCount; i++) {
+        const char* hac = cfg.input[i - 1].haClass;
+        bool hasClass = strcmp(hac, "None") != 0 && strlen(hac) > 0;
         snprintf(topic, sizeof(topic),
-            "homeassistant/binary_sensor/%s_input_%d/config", DEVICE_ID, i);
-        snprintf(payload, sizeof(payload),
-            "{"
-            "\"name\":\"Input %d\","
-            "\"uniq_id\":\"%s_i%d\","
-            "\"stat_t\":\"%s/%d/state\","
-            "\"pl_on\":\"ON\","
-            "\"pl_off\":\"OFF\","
-            "\"dev_cla\":\"%s\","
-            "\"avty_t\":\"%s\","
-            "\"pl_avail\":\"online\","
-            "\"pl_not_avail\":\"offline\","
-            "\"dev\":{"
-              "\"ids\":[\"%s\"],"
-              "\"name\":\"%s\","
-              "\"mf\":\"ESP32 Modular\","
-              "\"mdl\":\"CPU S3 Zero\""
-            "}"
-            "}",
-            i,
-            DEVICE_ID, i,
-            tInputState, i,
-            inputClasses[i - 1],
-            tStatus,
-            DEVICE_ID, DEVICE_NAME);
+            "homeassistant/binary_sensor/%s_input_%d/config", cfg.deviceId, i);
+        if (hasClass) {
+            snprintf(payload, sizeof(payload),
+                "{"
+                "\"name\":\"%s\","
+                "\"uniq_id\":\"%s_i%d\","
+                "\"stat_t\":\"%s/%d/state\","
+                "\"pl_on\":\"ON\",\"pl_off\":\"OFF\","
+                "\"dev_cla\":\"%s\","
+                "\"avty_t\":\"%s\","
+                "\"pl_avail\":\"online\","
+                "\"pl_not_avail\":\"offline\","
+                "\"dev\":{\"ids\":[\"%s\"],\"name\":\"%s\","
+                  "\"mf\":\"ESP32 Modular\",\"mdl\":\"CPU S3 Zero\"}"
+                "}",
+                cfg.input[i - 1].name,
+                cfg.deviceId, i,
+                tInputState, i,
+                hac,
+                tStatus,
+                cfg.deviceId, cfg.deviceName);
+        } else {
+            snprintf(payload, sizeof(payload),
+                "{"
+                "\"name\":\"%s\","
+                "\"uniq_id\":\"%s_i%d\","
+                "\"stat_t\":\"%s/%d/state\","
+                "\"pl_on\":\"ON\",\"pl_off\":\"OFF\","
+                "\"avty_t\":\"%s\","
+                "\"pl_avail\":\"online\","
+                "\"pl_not_avail\":\"offline\","
+                "\"dev\":{\"ids\":[\"%s\"],\"name\":\"%s\","
+                  "\"mf\":\"ESP32 Modular\",\"mdl\":\"CPU S3 Zero\"}"
+                "}",
+                cfg.input[i - 1].name,
+                cfg.deviceId, i,
+                tInputState, i,
+                tStatus,
+                cfg.deviceId, cfg.deviceName);
+        }
         mqtt.publish(topic, payload, true);
         delay(20);
     }
@@ -223,9 +235,24 @@ void mqttCallback(char* topic, byte* payload, unsigned int len) {
     char* p = strstr(topic, "/relay/");
     if (p) {
         int ch = atoi(p + 7);
-        if (strcmp(msg, "ON")    == 0) { setRelay(ch, true);  pubRelayState(ch); }
-        if (strcmp(msg, "OFF")   == 0) { setRelay(ch, false); pubRelayState(ch); }
-        if (strcmp(msg, "PULSE") == 0) { pulseRelay(ch, 500); pubRelayState(ch); }
+        if (ch < 1 || ch > cfg.relayCount) return;
+        uint8_t  mode = cfg.relay[ch - 1].mode;
+        uint16_t ms   = cfg.relay[ch - 1].pulseMs;
+
+        if (strcmp(msg, "ON") == 0) {
+            setRelay(ch, true);
+            if (mode == MODE_PULSE || mode == MODE_TIMER)
+                relayAutoOff[ch - 1] = millis() + ms;
+            pubRelayState(ch);
+        } else if (strcmp(msg, "OFF") == 0) {
+            setRelay(ch, false);
+            relayAutoOff[ch - 1] = 0;
+            pubRelayState(ch);
+        } else if (strcmp(msg, "PULSE") == 0) {
+            setRelay(ch, true);
+            relayAutoOff[ch - 1] = millis() + ms;
+            pubRelayState(ch);
+        }
         return;
     }
 
@@ -233,11 +260,16 @@ void mqttCallback(char* topic, byte* payload, unsigned int len) {
     p = strstr(topic, "/toggle");
     if (p) {
         char* q = strstr(topic, "/relay/");
-        if (q) {
-            int ch = atoi(q + 7);
-            setRelay(ch, !getRelay(ch));
-            pubRelayState(ch);
-        }
+        if (!q) return;
+        int ch = atoi(q + 7);
+        if (ch < 1 || ch > cfg.relayCount) return;
+        bool newOn = !getRelay(ch);
+        setRelay(ch, newOn);
+        if (newOn && (cfg.relay[ch - 1].mode == MODE_PULSE || cfg.relay[ch - 1].mode == MODE_TIMER))
+            relayAutoOff[ch - 1] = millis() + cfg.relay[ch - 1].pulseMs;
+        else
+            relayAutoOff[ch - 1] = 0;
+        pubRelayState(ch);
     }
 }
 
@@ -246,9 +278,8 @@ void mqttCallback(char* topic, byte* payload, unsigned int len) {
 // ==========================================================
 
 bool mqttConnect() {
-    if (mqtt.connect(DEVICE_ID, MQTT_USER, MQTT_PASS,
+    if (mqtt.connect(cfg.deviceId, cfg.mqttUser, cfg.mqttPass,
                      tStatus, 1, true, "offline")) {
-        // Suscribirse a comandos de relés
         char sub[96];
         snprintf(sub, sizeof(sub), "%s/+/set",    tRelaySet);
         mqtt.subscribe(sub, 1);
@@ -264,52 +295,65 @@ bool mqttConnect() {
 }
 
 // ==========================================================
-//   OLED — Pantalla de estado
+//   OLED — Pantalla de estado normal
 // ==========================================================
 
 void updateOled() {
     if (!oledOk) return;
     display.clearDisplay();
     display.setTextColor(SSD1306_WHITE);
-
-    // Línea 1: ID del módulo
     display.setTextSize(1);
-    display.setCursor(0, 0);
-    display.printf("%-12s %s", DEVICE_ID, mqtt.connected() ? "MQ" : "--");
 
-    // Línea 2: IP / estado WiFi
+    display.setCursor(0, 0);
+    display.printf("%-12s %s", cfg.deviceId, mqtt.connected() ? "MQ" : "--");
+
     display.setCursor(0, 11);
     if (WiFi.isConnected())
         display.print(WiFi.localIP().toString());
     else
         display.print("Sin WiFi...");
 
-    // Separador
     display.drawFastHLine(0, 22, 128, SSD1306_WHITE);
 
-    // Línea 3: Estado relés
     display.setCursor(0, 26);
     display.print("R:");
-    for (int i = 1; i <= RELAY_COUNT; i++) {
+    for (int i = 1; i <= cfg.relayCount; i++)
         display.printf("%d%s ", i, getRelay(i) ? "*" : "o");
-    }
     if (!relayModuleOk) display.print("?");
 
-    // Línea 4: Estado entradas
     display.setCursor(0, 38);
     display.print("I:");
     if (inputModuleOk) {
-        for (int i = 0; i < INPUT_COUNT; i++)
+        for (int i = 0; i < cfg.inputCount; i++)
             display.print(!(inputState & (1 << i)) ? "*" : ".");
     } else {
         display.print("no detectado");
     }
 
-    // Línea 5: RSSI WiFi
     display.setCursor(0, 52);
     if (WiFi.isConnected())
         display.printf("WiFi: %d dBm", WiFi.RSSI());
 
+    display.display();
+}
+
+// OLED — Pantalla de portal captivo
+void oledPortal(const String& apName) {
+    if (!oledOk) return;
+    display.clearDisplay();
+    display.setTextSize(1);
+    display.setTextColor(SSD1306_WHITE);
+    display.setCursor(0, 0);
+    display.println("MODO CONFIGURACION");
+    display.drawFastHLine(0, 10, 128, SSD1306_WHITE);
+    display.setCursor(0, 14);
+    display.println("Conectar a WiFi:");
+    display.setCursor(0, 24);
+    display.println(apName);
+    display.setCursor(0, 38);
+    display.println("Luego abrir:");
+    display.setCursor(0, 48);
+    display.println("192.168.4.1");
     display.display();
 }
 
@@ -318,17 +362,16 @@ void updateOled() {
 // ==========================================================
 
 void setupOTA() {
-    ArduinoOTA.setHostname(DEVICE_ID);
-    ArduinoOTA.setPassword(OTA_PASS);
+    ArduinoOTA.setHostname(cfg.deviceId);
+    ArduinoOTA.setPassword(cfg.otaPass);
 
     ArduinoOTA.onStart([]() {
-        if (oledOk) {
-            display.clearDisplay();
-            display.setTextSize(1);
-            display.setCursor(0, 0);
-            display.println("Actualizando OTA...");
-            display.display();
-        }
+        if (!oledOk) return;
+        display.clearDisplay();
+        display.setTextSize(1);
+        display.setCursor(0, 0);
+        display.println("Actualizando OTA...");
+        display.display();
     });
 
     ArduinoOTA.onProgress([](unsigned int prog, unsigned int total) {
@@ -342,12 +385,11 @@ void setupOTA() {
     });
 
     ArduinoOTA.onEnd([]() {
-        if (oledOk) {
-            display.clearDisplay();
-            display.setCursor(0, 0);
-            display.println("Listo! Reiniciando...");
-            display.display();
-        }
+        if (!oledOk) return;
+        display.clearDisplay();
+        display.setCursor(0, 0);
+        display.println("Listo! Reiniciando...");
+        display.display();
     });
 
     ArduinoOTA.onError([](ota_error_t err) {
@@ -365,6 +407,11 @@ void setup() {
     Serial.begin(115200);
     delay(500);
     Serial.println("\n== Sistema Modular ESP32 ==");
+
+    // Cargar configuración desde NVS (o defaults si es la primera vez)
+    configLoad();
+    Serial.printf("Device: %s  Configurado: %s\n",
+                  cfg.deviceId, cfg.configured ? "SI" : "NO");
 
     // I2C
     Wire.begin(I2C_SDA, I2C_SCL);
@@ -386,47 +433,44 @@ void setup() {
     // Detectar módulos I2C
     relayModuleOk = i2cDevicePresent(RELAY_ADDR);
     inputModuleOk = i2cDevicePresent(INPUT_ADDR);
-    Serial.printf("Relay module (0x%02X): %s\n", RELAY_ADDR, relayModuleOk ? "OK" : "no detectado");
-    Serial.printf("Input module (0x%02X): %s\n", INPUT_ADDR, inputModuleOk ? "OK" : "no detectado");
+    Serial.printf("Relay (0x%02X): %s\n", RELAY_ADDR, relayModuleOk ? "OK" : "no detectado");
+    Serial.printf("Input (0x%02X): %s\n", INPUT_ADDR, inputModuleOk ? "OK" : "no detectado");
 
-    // Init relés (todos OFF)
     if (relayModuleOk) applyRelays();
+    if (inputModuleOk) { pcfRead(INPUT_ADDR, inputState); inputPrev = inputState; }
 
-    // Leer estado inicial de entradas
-    if (inputModuleOk) {
-        pcfRead(INPUT_ADDR, inputState);
-        inputPrev = inputState;
+    // ── Modo portal: arranca sin configuración guardada ───
+    if (!cfg.configured) {
+        portalMode = true;
+        String apName = "ESP32-";
+        apName += cfg.deviceId;
+        Serial.printf("Portal: SSID=%s  IP=192.168.4.1\n", apName.c_str());
+        oledPortal(apName);
+        portalBegin();
+        return;
     }
 
-    // Construir topics MQTT
-    snprintf(tRelaySet,   sizeof(tRelaySet),   "esp32modular/%s/relay", DEVICE_ID);
-    snprintf(tRelayState, sizeof(tRelayState),  "esp32modular/%s/relay", DEVICE_ID);
-    snprintf(tInputState, sizeof(tInputState),  "esp32modular/%s/input", DEVICE_ID);
-    snprintf(tStatus,     sizeof(tStatus),      "esp32modular/%s/status", DEVICE_ID);
+    // ── Modo normal ───────────────────────────────────────
+    snprintf(tRelaySet,   sizeof(tRelaySet),   "esp32modular/%s/relay", cfg.deviceId);
+    snprintf(tRelayState, sizeof(tRelayState),  "esp32modular/%s/relay", cfg.deviceId);
+    snprintf(tInputState, sizeof(tInputState),  "esp32modular/%s/input", cfg.deviceId);
+    snprintf(tStatus,     sizeof(tStatus),      "esp32modular/%s/status", cfg.deviceId);
 
-    // WiFi
     WiFi.mode(WIFI_STA);
     WiFi.setAutoReconnect(true);
-    WiFi.begin(WIFI_SSID, WIFI_PASS);
-    Serial.printf("Conectando a %s", WIFI_SSID);
-
+    WiFi.begin(cfg.wifiSSID, cfg.wifiPass);
+    Serial.printf("Conectando a %s", cfg.wifiSSID);
     uint8_t tries = 0;
     while (WiFi.status() != WL_CONNECTED && tries < 30) {
-        delay(500);
-        Serial.print(".");
-        tries++;
+        delay(500); Serial.print("."); tries++;
     }
-    if (WiFi.isConnected()) {
-        Serial.printf("\nIP: %s\n", WiFi.localIP().toString().c_str());
-    } else {
-        Serial.println("\nSin WiFi — reintentando en loop");
-    }
+    Serial.println(WiFi.isConnected()
+        ? ("\nIP: " + WiFi.localIP().toString()).c_str()
+        : "\nSin WiFi — reintentando en loop");
 
-    // OTA
     setupOTA();
 
-    // MQTT
-    mqtt.setServer(MQTT_HOST, MQTT_PORT);
+    mqtt.setServer(cfg.mqttHost, cfg.mqttPort);
     mqtt.setCallback(mqttCallback);
     mqtt.setBufferSize(512);
     mqtt.setKeepAlive(30);
@@ -440,12 +484,27 @@ void setup() {
 // ==========================================================
 
 void loop() {
+    // Portal mode: ceder el control al servidor web
+    if (portalMode) {
+        portalLoop();
+        return;
+    }
+
     unsigned long now = millis();
 
     // OTA
     ArduinoOTA.handle();
 
-    // WiFi — verificar cada 10s sin bloquear
+    // Auto-off de relés en modo PULSE / TIMER (no bloqueante)
+    for (int i = 0; i < cfg.relayCount; i++) {
+        if (relayAutoOff[i] && now >= relayAutoOff[i]) {
+            relayAutoOff[i] = 0;
+            setRelay(i + 1, false);
+            if (mqtt.connected()) pubRelayState(i + 1);
+        }
+    }
+
+    // WiFi — verificar cada 10s
     if (now - tWifiCheck >= 10000) {
         tWifiCheck = now;
         if (WiFi.status() != WL_CONNECTED) {
@@ -454,7 +513,7 @@ void loop() {
         }
     }
 
-    // MQTT — reconexión cada 5s si está desconectado
+    // MQTT — reconexión cada 5s
     if (!mqtt.connected() && WiFi.isConnected()) {
         if (now - tReconnect >= 5000) {
             tReconnect = now;
@@ -472,7 +531,7 @@ void loop() {
             if (pcfRead(INPUT_ADDR, newState)) {
                 uint8_t changed = newState ^ inputPrev;
                 if (changed && mqtt.connected()) {
-                    for (int i = 0; i < INPUT_COUNT; i++) {
+                    for (int i = 0; i < cfg.inputCount; i++) {
                         if (changed & (1 << i)) {
                             bool active = !(newState & (1 << i));
                             pubInputState(i + 1, active);
@@ -495,7 +554,6 @@ void loop() {
     // Heartbeat MQTT cada 60s
     if (now - tHeartbeat >= 60000) {
         tHeartbeat = now;
-        if (mqtt.connected())
-            mqtt.publish(tStatus, "online", true);
+        if (mqtt.connected()) mqtt.publish(tStatus, "online", true);
     }
 }
