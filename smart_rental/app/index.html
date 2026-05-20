@@ -4,805 +4,993 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <title>Nido</title>
 <style>
-/* ── Design tokens ─────────────────────────────────────── */
+/* ── Tokens ──────────────────────────────────────────────── */
 :root {
   --bg:        #F2F2F7;
   --card:      #FFFFFF;
-  --card2:     #F2F2F7;
+  --card2:     #EFEFF4;
   --blue:      #007AFF;
   --green:     #34C759;
   --red:       #FF3B30;
   --orange:    #FF9500;
+  --purple:    #AF52DE;
+  --teal:      #32ADE6;
   --label1:    #000000;
-  --label2:    #3C3C43;
+  --label2:    #3C3C43CC;
   --label3:    #8E8E93;
-  --separator: rgba(60,60,67,0.12);
-  --r-card:    16px;
-  --r-btn:     14px;
-  --shadow:    0 2px 16px rgba(0,0,0,0.08);
+  --sep:       rgba(60,60,67,0.12);
+  --r:         16px;
+  --shadow-sm: 0 1px 8px rgba(0,0,0,0.06);
+  --shadow:    0 2px 20px rgba(0,0,0,0.08);
+  --shadow-lg: 0 8px 40px rgba(0,0,0,0.12);
   --font:      -apple-system, BlinkMacSystemFont, 'SF Pro Display',
                'Helvetica Neue', sans-serif;
 }
 
-
-/* ── Reset ─────────────────────────────────────────────── */
+/* ── Reset ───────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html, body { height: 100%; }
+html { height: 100%; }
 body {
   font-family: var(--font);
   background: var(--bg);
   color: var(--label1);
   -webkit-font-smoothing: antialiased;
-  overflow-x: hidden;
+  height: 100%;
+  overflow: hidden;
 }
 
-/* ── Screens ───────────────────────────────────────────── */
-.screen { display: none; min-height: 100vh; }
-.screen.active { display: flex; flex-direction: column; }
+/* ── Screens ─────────────────────────────────────────────── */
+.screen { display: none; height: 100vh; flex-direction: column; }
+.screen.active { display: flex; }
 
 /* ══════════════════════════════════════════════════════════
-   LOGIN SCREEN
+   LOGIN
 ══════════════════════════════════════════════════════════ */
 #screen-login {
+  background: var(--bg);
   align-items: center;
   justify-content: center;
-  padding: 40px 32px;
-  background: var(--bg);
+  padding: 48px 32px 48px;
 }
 
-.login-logo {
+.logo-wrap {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-bottom: 56px;
+  margin-bottom: 60px;
 }
 
 .logo-mark {
-  width: 80px; height: 80px;
+  width: 88px; height: 88px;
   background: var(--blue);
-  border-radius: 22px;
+  border-radius: 26px;
   display: flex; align-items: center; justify-content: center;
-  margin-bottom: 16px;
-  box-shadow: 0 8px 32px rgba(0,122,255,0.35);
+  margin-bottom: 20px;
+  box-shadow: 0 12px 40px rgba(0,122,255,0.30);
 }
 
-.logo-mark svg { color: white; }
-
-.login-logo h1 {
-  font-size: 32px;
+.logo-text {
+  font-size: 36px;
   font-weight: 700;
-  letter-spacing: -0.5px;
+  letter-spacing: -1px;
   color: var(--label1);
 }
 
-.login-logo p {
+.logo-sub {
   font-size: 15px;
   color: var(--label3);
-  margin-top: 4px;
+  margin-top: 5px;
+  text-align: center;
+  line-height: 1.4;
 }
 
-.login-form { width: 100%; max-width: 360px; }
-
-.input-group {
-  background: var(--card);
-  border-radius: var(--r-card);
-  overflow: hidden;
-  margin-bottom: 12px;
-  box-shadow: var(--shadow);
-}
-
-.input-group input {
-  display: block;
+.field-group {
   width: 100%;
-  padding: 16px 18px;
+  max-width: 340px;
+  background: var(--card);
+  border-radius: var(--r);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  margin-bottom: 14px;
+}
+
+.field-group input {
+  display: block; width: 100%;
+  padding: 15px 18px;
   font-family: var(--font);
-  font-size: 17px;
+  font-size: 16px;
   color: var(--label1);
   background: transparent;
-  border: none;
-  outline: none;
+  border: none; outline: none;
 }
+.field-group input + input { border-top: 1px solid var(--sep); }
+.field-group input::placeholder { color: var(--label3); }
 
-.input-group input::placeholder { color: var(--label3); }
-.input-group input + input { border-top: 1px solid var(--separator); }
-
-.btn-primary {
-  width: 100%;
-  padding: 16px;
+.btn-cta {
+  width: 100%; max-width: 340px;
+  padding: 15px;
   background: var(--blue);
-  color: white;
+  color: #fff;
   font-family: var(--font);
-  font-size: 17px;
-  font-weight: 600;
-  border: none;
-  border-radius: var(--r-btn);
+  font-size: 17px; font-weight: 600;
+  border: none; border-radius: var(--r);
   cursor: pointer;
-  margin-top: 8px;
-  transition: opacity .15s;
-  box-shadow: 0 4px 16px rgba(0,122,255,0.35);
+  box-shadow: 0 4px 20px rgba(0,122,255,0.30);
+  transition: transform .12s, opacity .12s;
 }
-.btn-primary:active { opacity: 0.8; }
+.btn-cta:active { transform: scale(0.98); opacity: 0.88; }
 
 /* ══════════════════════════════════════════════════════════
-   MAIN APP SHELL
+   APP SHELL
 ══════════════════════════════════════════════════════════ */
-#screen-main {
-  padding-bottom: 84px; /* tab bar height */
-}
+#screen-main { overflow: hidden; }
 
-/* ── Navigation bar ─────────────────────────────────────── */
-.nav-bar {
-  position: sticky; top: 0; z-index: 100;
-  background: rgba(242,242,247,0.85);
-  backdrop-filter: saturate(180%) blur(20px);
-  -webkit-backdrop-filter: saturate(180%) blur(20px);
-  padding: env(safe-area-inset-top, 44px) 20px 12px;
+/* ── Top nav ─────────────────────────────────────────────── */
+.topbar {
+  background: rgba(242,242,247,0.92);
+  backdrop-filter: saturate(180%) blur(24px);
+  -webkit-backdrop-filter: saturate(180%) blur(24px);
+  padding: 54px 20px 10px;
   display: flex; align-items: center; justify-content: space-between;
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--sep);
 }
 
-
-.nav-bar .nav-title {
-  font-size: 17px;
-  font-weight: 600;
-  color: var(--label1);
-}
-.nav-bar .nav-logo {
-  font-size: 22px;
-  font-weight: 800;
-  color: var(--blue);
-  letter-spacing: -0.5px;
-}
-.nav-bar .nav-action {
-  width: 32px; height: 32px;
-  background: var(--card2);
-  border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  border: none; cursor: pointer;
-  color: var(--label2); font-size: 16px;
-}
-
-/* ── Scroll content ─────────────────────────────────────── */
-.scroll-content { padding: 8px 16px 16px; }
-
-/* ── Section header ─────────────────────────────────────── */
-.section-header {
-  font-size: 22px;
-  font-weight: 700;
-  color: var(--label1);
-  margin: 20px 4px 12px;
+.app-title {
+  font-size: 17px; font-weight: 700;
   letter-spacing: -0.3px;
+  color: var(--blue);
 }
 
-.section-sub {
-  font-size: 13px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--label3);
-  margin: 20px 4px 8px;
-}
-
-/* ── Status hero card ───────────────────────────────────── */
-.hero-card {
-  background: var(--card);
-  border-radius: 20px;
-  padding: 20px;
-  box-shadow: var(--shadow);
-  margin-bottom: 12px;
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.hero-icon {
-  width: 56px; height: 56px;
-  border-radius: 14px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 26px;
-  flex-shrink: 0;
-}
-.hero-icon.green { background: rgba(52,199,89,0.15); }
-.hero-icon.red   { background: rgba(255,59,48,0.15); }
-.hero-icon.orange{ background: rgba(255,149,0,0.15); }
-
-.hero-text h2 {
-  font-size: 19px;
-  font-weight: 700;
-  color: var(--label1);
-  letter-spacing: -0.2px;
-}
-.hero-text p {
-  font-size: 14px;
-  color: var(--label3);
-  margin-top: 2px;
-}
-
-.status-dot {
-  width: 10px; height: 10px;
-  border-radius: 50%;
-  margin-left: auto;
-  flex-shrink: 0;
-}
-.status-dot.green { background: var(--green); box-shadow: 0 0 8px rgba(52,199,89,0.5); }
-.status-dot.red   { background: var(--red);   box-shadow: 0 0 8px rgba(255,59,48,0.5); }
-.status-dot.orange{ background: var(--orange); }
-
-/* ── Action grid ────────────────────────────────────────── */
-.action-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  margin-bottom: 12px;
-}
-
-.action-card {
-  background: var(--card);
-  border-radius: var(--r-card);
-  padding: 18px 16px;
-  box-shadow: var(--shadow);
+.prop-pill {
+  display: flex; align-items: center; gap: 5px;
+  background: var(--card2);
+  border: none; border-radius: 20px;
+  padding: 5px 12px 5px 9px;
+  font-family: var(--font);
+  font-size: 13px; font-weight: 500;
+  color: var(--label2);
   cursor: pointer;
-  transition: transform .1s, opacity .1s;
-  border: none;
-  text-align: left;
+}
+.prop-pill-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 6px rgba(52,199,89,0.6);
+}
+
+.topbar-icon {
+  width: 30px; height: 30px;
+  background: var(--card2);
+  border: none; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: var(--label3);
+}
+
+/* ── Scroll area ─────────────────────────────────────────── */
+.panels-wrap {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 88px;
+}
+
+.panel { display: none; }
+.panel.active { display: block; }
+
+/* ── Alert strip ─────────────────────────────────────────── */
+.alert-strip {
+  margin: 12px 16px 0;
+  background: rgba(255,59,48,0.08);
+  border: 1px solid rgba(255,59,48,0.18);
+  border-radius: 12px;
+  padding: 11px 14px;
+  display: flex; align-items: center; gap: 10px;
+  font-size: 13px; font-weight: 500; color: var(--red);
+}
+.alert-strip.hidden { display: none; }
+.alert-strip-icon { font-size: 16px; flex-shrink: 0; }
+
+/* ══ LOCK — protagonista ═════════════════════════════════ */
+.lock-section {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-}
-.action-card:active { transform: scale(0.97); opacity: 0.9; }
-
-.action-icon {
-  width: 42px; height: 42px;
-  border-radius: 10px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 20px;
-}
-.action-icon.blue   { background: rgba(0,122,255,0.12); }
-.action-icon.green  { background: rgba(52,199,89,0.12); }
-.action-icon.red    { background: rgba(255,59,48,0.12); }
-.action-icon.orange { background: rgba(255,149,0,0.12); }
-.action-icon.purple { background: rgba(175,82,222,0.12); }
-.action-icon.teal   { background: rgba(48,176,199,0.12); }
-
-.action-card h3 {
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--label1);
-}
-.action-card p {
-  font-size: 12px;
-  color: var(--label3);
-  margin-top: 1px;
-}
-
-/* ── List card (sensor rows) ────────────────────────────── */
-.list-card {
-  background: var(--card);
-  border-radius: var(--r-card);
-  box-shadow: var(--shadow);
-  overflow: hidden;
-  margin-bottom: 12px;
-}
-
-.list-row {
-  display: flex;
   align-items: center;
-  padding: 14px 16px;
-  gap: 14px;
+  padding: 28px 20px 20px;
+}
+
+.lock-ring {
+  position: relative;
+  width: 180px; height: 180px;
+  margin-bottom: 18px;
+}
+
+.lock-btn-main {
+  width: 180px; height: 180px;
+  border-radius: 50%;
+  background: var(--card);
+  border: none;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 6px;
   cursor: pointer;
-  transition: background .1s;
+  box-shadow:
+    0 0 0 8px rgba(0,0,0,0.04),
+    0 12px 40px rgba(0,0,0,0.12);
+  transition: transform .12s cubic-bezier(.25,.46,.45,.94),
+              box-shadow .2s;
+  position: relative;
+  z-index: 1;
 }
-.list-row:active { background: var(--card2); }
-.list-row + .list-row { border-top: 1px solid var(--separator); }
-
-.row-icon {
-  width: 32px; height: 32px;
-  border-radius: 8px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 16px;
-  flex-shrink: 0;
+.lock-btn-main:active {
+  transform: scale(0.94);
+  box-shadow:
+    0 0 0 6px rgba(0,0,0,0.03),
+    0 6px 20px rgba(0,0,0,0.10);
+}
+.lock-btn-main.unlocked {
+  box-shadow:
+    0 0 0 8px rgba(52,199,89,0.12),
+    0 12px 40px rgba(52,199,89,0.20);
 }
 
-.row-label {
+.lock-btn-icon { font-size: 52px; line-height: 1; }
+.lock-btn-label {
+  font-size: 13px; font-weight: 600;
+  color: var(--label3);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.lock-btn-main.unlocked .lock-btn-label { color: var(--green); }
+
+/* Pulse ring cuando está abierta */
+@keyframes lock-pulse {
+  0%   { transform: scale(1);   opacity: 0.35; }
+  70%  { transform: scale(1.18); opacity: 0; }
+  100% { transform: scale(1.18); opacity: 0; }
+}
+.lock-pulse {
+  position: absolute; inset: -8px;
+  border-radius: 50%;
+  border: 2px solid var(--green);
+  animation: lock-pulse 1.8s ease-out infinite;
+  display: none;
+}
+.unlocked .lock-pulse { display: block; }
+
+.lock-sub-row {
+  display: flex; gap: 12px;
+}
+
+.lock-sub-btn {
   flex: 1;
-  font-size: 16px;
+  padding: 12px;
+  background: var(--card);
+  border: none; border-radius: 12px;
+  font-family: var(--font);
+  font-size: 13px; font-weight: 600;
+  color: var(--label2);
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  transition: transform .1s;
+  max-width: 140px;
+}
+.lock-sub-btn:active { transform: scale(0.97); }
+
+/* ══ STATS ROW ═══════════════════════════════════════════ */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  padding: 0 16px 4px;
+}
+
+.stat-card {
+  background: var(--card);
+  border-radius: 14px;
+  padding: 14px 12px;
+  box-shadow: var(--shadow-sm);
+  display: flex; flex-direction: column; gap: 6px;
+}
+
+.stat-label {
+  font-size: 11px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.05em;
+  color: var(--label3);
+}
+.stat-value {
+  font-size: 22px; font-weight: 700;
+  letter-spacing: -0.5px;
+  color: var(--label1);
+  line-height: 1;
+}
+.stat-unit {
+  font-size: 11px; color: var(--label3); font-weight: 500;
+}
+
+/* ══ SENSORS GRID ════════════════════════════════════════ */
+.section-label {
+  font-size: 13px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.05em;
+  color: var(--label3);
+  margin: 16px 20px 8px;
+}
+
+.sensor-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  padding: 0 16px;
+}
+
+.sensor-card {
+  background: var(--card);
+  border-radius: 14px;
+  padding: 16px;
+  box-shadow: var(--shadow-sm);
+  display: flex; flex-direction: column; gap: 10px;
+  position: relative;
+  overflow: hidden;
+}
+
+.sensor-icon { font-size: 28px; line-height: 1; }
+
+.sensor-info { flex: 1; }
+.sensor-name {
+  font-size: 13px; font-weight: 600;
   color: var(--label1);
 }
-.row-sub {
-  font-size: 13px;
-  color: var(--label3);
-  margin-top: 1px;
+.sensor-status {
+  font-size: 12px; font-weight: 500;
+  margin-top: 2px;
+}
+.sensor-status.ok     { color: var(--green); }
+.sensor-status.alert  { color: var(--red); }
+.sensor-status.warn   { color: var(--orange); }
+
+.sensor-dot {
+  position: absolute; top: 14px; right: 14px;
+  width: 8px; height: 8px; border-radius: 50%;
+}
+.sensor-dot.ok     { background: var(--green); }
+.sensor-dot.alert  { background: var(--red); animation: pulse-dot 2s infinite; }
+.sensor-dot.warn   { background: var(--orange); }
+
+@keyframes pulse-dot {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255,59,48,0.5); }
+  50%       { box-shadow: 0 0 0 5px rgba(255,59,48,0); }
 }
 
-.row-value {
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--label3);
+/* ══ ENERGY ROW ══════════════════════════════════════════ */
+.energy-card {
+  margin: 0 16px;
+  background: var(--card);
+  border-radius: var(--r);
+  padding: 16px;
+  box-shadow: var(--shadow-sm);
+  display: flex; align-items: center; gap: 14px;
 }
-.row-value.ok     { color: var(--green); }
-.row-value.alert  { color: var(--red); }
-.row-value.warn   { color: var(--orange); }
 
-/* ── Toggle switch ──────────────────────────────────────── */
-.toggle {
-  position: relative;
-  width: 51px; height: 31px;
-  flex-shrink: 0;
+.energy-icon {
+  width: 44px; height: 44px;
+  border-radius: 12px;
+  background: rgba(255,149,0,0.12);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; flex-shrink: 0;
 }
-.toggle input { opacity: 0; width: 0; height: 0; }
-.toggle-track {
+
+.energy-info { flex: 1; }
+.energy-title { font-size: 15px; font-weight: 600; }
+.energy-sub   { font-size: 13px; color: var(--label3); margin-top: 2px; }
+
+.energy-toggles { display: flex; flex-direction: column; gap: 10px; }
+
+.energy-row {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 13px; color: var(--label2);
+}
+
+.mini-toggle {
+  position: relative; width: 40px; height: 24px; flex-shrink: 0;
+}
+.mini-toggle input { opacity: 0; width: 0; height: 0; }
+.mini-track {
   position: absolute; inset: 0;
   background: #E5E5EA;
-  border-radius: 31px;
-  transition: background .2s;
+  border-radius: 24px;
   cursor: pointer;
+  transition: background .2s;
 }
-.toggle input:checked + .toggle-track { background: var(--green); }
-.toggle-track::after {
+.mini-toggle input:checked + .mini-track { background: var(--green); }
+.mini-track::after {
   content: '';
   position: absolute;
-  width: 27px; height: 27px;
+  width: 20px; height: 20px;
   left: 2px; top: 2px;
   background: white;
   border-radius: 50%;
   transition: transform .2s;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.18);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.2);
 }
-.toggle input:checked + .toggle-track::after { transform: translateX(20px); }
+.mini-toggle input:checked + .mini-track::after { transform: translateX(16px); }
 
-
-/* ── Lock button ────────────────────────────────────────── */
-.lock-btn-wrap {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 12px;
-}
-.lock-btn {
-  flex: 1;
-  padding: 18px;
-  border: none;
-  border-radius: var(--r-card);
-  font-family: var(--font);
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: transform .1s, opacity .1s;
-  box-shadow: var(--shadow);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-}
-.lock-btn:active { transform: scale(0.97); opacity: 0.9; }
-.lock-btn .btn-icon { font-size: 28px; }
-
-.lock-btn.open {
-  background: linear-gradient(135deg, #34C759, #28A745);
-  color: white;
-}
-.lock-btn.lock {
+/* ══ LIST CARD ═══════════════════════════════════════════ */
+.list-card {
+  margin: 0 16px;
   background: var(--card);
-  color: var(--label1);
+  border-radius: var(--r);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
 }
 
-/* ── Property selector card ─────────────────────────────── */
-.property-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: var(--card2);
-  border: none;
-  border-radius: 20px;
-  padding: 6px 14px;
-  font-family: var(--font);
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--label2);
+.list-row {
+  display: flex; align-items: center;
+  padding: 13px 16px; gap: 12px;
   cursor: pointer;
+  transition: background .1s;
 }
+.list-row:active { background: var(--card2); }
+.list-row + .list-row { border-top: 1px solid var(--sep); }
 
-/* ── Tab bar ────────────────────────────────────────────── */
-.tab-bar {
-  position: fixed;
-  bottom: 0; left: 0; right: 0;
-  background: rgba(242,242,247,0.92);
-  backdrop-filter: saturate(180%) blur(20px);
-  -webkit-backdrop-filter: saturate(180%) blur(20px);
-  border-top: 1px solid var(--separator);
-  display: flex;
-  padding-bottom: env(safe-area-inset-bottom, 16px);
-  z-index: 100;
-}
-
-
-.tab-item {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 10px 0;
-  cursor: pointer;
-  border: none;
-  background: transparent;
-  gap: 4px;
-  transition: color .15s;
-}
-.tab-icon { font-size: 22px; }
-.tab-label { font-size: 10px; font-family: var(--font); font-weight: 500; color: var(--label3); }
-.tab-item.active .tab-label { color: var(--blue); }
-.tab-item.active .tab-icon  { filter: none; }
-
-/* ── Alert banner ───────────────────────────────────────── */
-.alert-banner {
-  background: rgba(255,59,48,0.1);
-  border: 1px solid rgba(255,59,48,0.2);
-  border-radius: var(--r-card);
-  padding: 14px 16px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 12px;
-  font-size: 14px;
-  color: var(--red);
-  font-weight: 500;
-}
-.alert-banner.hidden { display: none; }
-
-/* ── Tenant card ────────────────────────────────────────── */
-.tenant-card {
-  background: var(--card);
-  border-radius: var(--r-card);
-  padding: 16px;
-  box-shadow: var(--shadow);
-  margin-bottom: 12px;
-  display: flex;
-  align-items: center;
-  gap: 14px;
-}
-.tenant-avatar {
-  width: 48px; height: 48px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, var(--blue), #5AC8FA);
+.row-ico {
+  width: 32px; height: 32px;
+  border-radius: 8px;
   display: flex; align-items: center; justify-content: center;
-  color: white; font-size: 20px; font-weight: 700;
+  font-size: 16px; flex-shrink: 0;
+}
+.row-ico.blue   { background: rgba(0,122,255,0.12); }
+.row-ico.green  { background: rgba(52,199,89,0.12); }
+.row-ico.red    { background: rgba(255,59,48,0.12); }
+.row-ico.orange { background: rgba(255,149,0,0.12); }
+.row-ico.purple { background: rgba(175,82,222,0.12); }
+.row-ico.gray   { background: rgba(142,142,147,0.12); }
+
+.row-text { flex: 1; }
+.row-main { font-size: 15px; color: var(--label1); }
+.row-hint { font-size: 12px; color: var(--label3); margin-top: 1px; }
+
+.row-right {
+  font-size: 13px; font-weight: 500; color: var(--label3);
+}
+.row-right.ok { color: var(--green); }
+.row-chevron  { color: var(--label3); font-size: 12px; }
+
+/* ══ TENANT PANEL ════════════════════════════════════════ */
+.tenant-hero {
+  margin: 12px 16px 0;
+  background: var(--card);
+  border-radius: 20px;
+  padding: 20px;
+  box-shadow: var(--shadow-sm);
+  display: flex; align-items: center; gap: 16px;
+}
+
+.avatar {
+  width: 54px; height: 54px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #007AFF, #5AC8FA);
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-size: 22px; font-weight: 700;
   flex-shrink: 0;
 }
-.tenant-info { flex: 1; }
-.tenant-info h3 { font-size: 16px; font-weight: 600; }
-.tenant-info p  { font-size: 13px; color: var(--label3); margin-top: 2px; }
-.tenant-badge {
+
+.tenant-meta { flex: 1; }
+.tenant-name { font-size: 17px; font-weight: 700; }
+.tenant-since { font-size: 13px; color: var(--label3); margin-top: 3px; }
+
+.badge-active {
   background: rgba(52,199,89,0.12);
   color: var(--green);
-  font-size: 12px;
-  font-weight: 600;
-  padding: 4px 10px;
-  border-radius: 20px;
+  font-size: 12px; font-weight: 600;
+  padding: 4px 10px; border-radius: 20px;
+  white-space: nowrap;
 }
 
-/* ── Anim ───────────────────────────────────────────────── */
-@keyframes pulse-red {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(255,59,48,0.4); }
-  50%       { box-shadow: 0 0 0 8px rgba(255,59,48,0); }
+/* ══ PROPERTIES PANEL ════════════════════════════════════ */
+.prop-card {
+  margin: 0 16px 10px;
+  background: var(--card);
+  border-radius: 18px;
+  padding: 16px;
+  box-shadow: var(--shadow-sm);
+  display: flex; align-items: center; gap: 14px;
+  cursor: pointer;
+  transition: transform .1s;
 }
-.pulsing { animation: pulse-red 2s infinite; }
+.prop-card:active { transform: scale(0.98); }
+
+.prop-thumb {
+  width: 50px; height: 50px;
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 24px; flex-shrink: 0;
+}
+.prop-thumb.green  { background: rgba(52,199,89,0.12); }
+.prop-thumb.orange { background: rgba(255,149,0,0.12); }
+.prop-thumb.gray   { background: rgba(142,142,147,0.10); opacity: 0.5; }
+
+.prop-info { flex: 1; }
+.prop-name  { font-size: 15px; font-weight: 600; }
+.prop-meta  { font-size: 12px; color: var(--label3); margin-top: 3px; }
+
+.prop-status-dot {
+  width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+}
+.prop-status-dot.green  { background: var(--green); box-shadow: 0 0 6px rgba(52,199,89,0.5); }
+.prop-status-dot.orange { background: var(--orange); }
+.prop-status-dot.gray   { background: #C7C7CC; }
+
+/* ══ HISTORY ═════════════════════════════════════════════ */
+.timeline-item {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 12px 16px;
+}
+.timeline-item + .timeline-item { border-top: 1px solid var(--sep); }
+
+.timeline-icon {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; flex-shrink: 0; margin-top: 1px;
+}
+
+.timeline-body { flex: 1; }
+.timeline-title { font-size: 14px; font-weight: 500; }
+.timeline-time  { font-size: 12px; color: var(--label3); margin-top: 2px; }
+
+/* ── Tab bar ─────────────────────────────────────────────── */
+.tabbar {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  background: rgba(242,242,247,0.94);
+  backdrop-filter: saturate(180%) blur(24px);
+  -webkit-backdrop-filter: saturate(180%) blur(24px);
+  border-top: 1px solid var(--sep);
+  display: flex;
+  padding-bottom: env(safe-area-inset-bottom, 12px);
+  z-index: 200;
+}
+
+.tab {
+  flex: 1;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 8px 0 4px;
+  border: none; background: transparent;
+  cursor: pointer; gap: 3px;
+  transition: opacity .1s;
+}
+.tab:active { opacity: 0.7; }
+
+.tab-ico { font-size: 22px; }
+.tab-lbl {
+  font-size: 10px; font-weight: 500;
+  font-family: var(--font);
+  color: var(--label3);
+}
+.tab.active .tab-lbl { color: var(--blue); }
+.tab.active .tab-ico  { filter: saturate(1); }
 </style>
 </head>
 <body>
 
-<!-- ══════════════════════════════════════════════════════
-     LOGIN
-══════════════════════════════════════════════════════ -->
+<!-- ══ LOGIN ══════════════════════════════════════════════ -->
 <div id="screen-login" class="screen active">
-  <div class="login-logo">
+  <div class="logo-wrap">
     <div class="logo-mark">
-      <svg width="44" height="44" viewBox="0 0 44 44" fill="none">
-        <path d="M22 8C14.268 8 8 14.268 8 22C8 29.732 14.268 36 22 36C29.732 36 36 29.732 36 22C36 14.268 29.732 8 22 8Z" fill="white" fill-opacity="0.2"/>
-        <path d="M22 12C16.477 12 12 16.477 12 22C12 27.523 16.477 32 22 32C27.523 32 32 27.523 32 22C32 16.477 27.523 12 22 12Z" fill="white" fill-opacity="0.3"/>
-        <path fill-rule="evenodd" clip-rule="evenodd" d="M22 16C18.686 16 16 18.686 16 22C16 25.314 18.686 28 22 28C25.314 28 28 25.314 28 22C28 18.686 25.314 16 22 16ZM22 20C20.895 20 20 20.895 20 22C20 23.105 20.895 24 22 24C23.105 24 24 23.105 24 22C24 20.895 23.105 20 22 20Z" fill="white"/>
-        <rect x="21" y="8" width="2" height="6" rx="1" fill="white"/>
+      <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+        <circle cx="24" cy="24" r="14" stroke="white" stroke-width="2.5" stroke-opacity="0.4"/>
+        <circle cx="24" cy="24" r="8"  fill="white" fill-opacity="0.25"/>
+        <circle cx="24" cy="24" r="4"  fill="white"/>
+        <rect x="23" y="6" width="2" height="8" rx="1" fill="white"/>
       </svg>
     </div>
-    <h1>Nido</h1>
-    <p>Gestión inteligente de propiedades</p>
+    <div class="logo-text">Nido</div>
+    <div class="logo-sub">Gestión inteligente<br>de propiedades</div>
   </div>
 
-  <div class="login-form">
-    <div class="input-group">
-      <input type="email" placeholder="Correo electrónico" value="propietario@gmail.com">
-      <input type="password" placeholder="Contraseña" value="••••••••">
-    </div>
-    <button class="btn-primary" onclick="showMain()">Ingresar</button>
+  <div class="field-group">
+    <input type="email"    placeholder="Correo electrónico" value="propietario@email.com">
+    <input type="password" placeholder="Contraseña"         value="••••••••">
   </div>
+  <button class="btn-cta" onclick="showMain()">Ingresar</button>
 </div>
 
-<!-- ══════════════════════════════════════════════════════
-     MAIN APP
-══════════════════════════════════════════════════════ -->
+<!-- ══ MAIN ═══════════════════════════════════════════════ -->
 <div id="screen-main" class="screen">
 
-  <!-- Nav bar -->
-  <div class="nav-bar">
-    <span class="nav-logo">Nido</span>
-    <button class="property-pill" onclick="">
-      🏢 Dpto 3B ▾
+  <!-- Top bar -->
+  <div class="topbar">
+    <span class="app-title">Nido</span>
+    <button class="prop-pill">
+      <span class="prop-pill-dot"></span>
+      Dpto 3B — Palermo ▾
     </button>
-    <button class="nav-action" onclick="showLogin()">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <button class="topbar-icon" onclick="showLogin()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
         <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-        <polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+        <polyline points="16 17 21 12 16 7"/>
+        <line x1="21" y1="12" x2="9" y2="12"/>
       </svg>
     </button>
   </div>
 
-  <!-- Tab content wrapper -->
-  <div id="tab-home" class="tab-panel active">
-    <div class="scroll-content">
+  <!-- Scroll panels -->
+  <div class="panels-wrap">
 
-      <!-- Alert banner (hidden if no alerts) -->
-      <div class="alert-banner hidden" id="alertBanner">
-        🚨 <span id="alertText">Puerta abierta hace 8 minutos</span>
+    <!-- ── HOME ─────────────────────────────────────────── -->
+    <div id="panel-home" class="panel active">
+
+      <!-- Alert strip (toggle con el botón stats) -->
+      <div class="alert-strip hidden" id="alertStrip">
+        <span class="alert-strip-icon">🚨</span>
+        Puerta de entrada abierta hace 8 minutos
       </div>
 
-      <!-- Status hero -->
-      <div class="hero-card">
-        <div class="hero-icon green">🏠</div>
-        <div class="hero-text">
-          <h2>Todo en orden</h2>
-          <p>Última actividad hace 2 horas</p>
+      <!-- Lock hero -->
+      <div class="lock-section">
+        <div class="lock-ring" id="lockRing">
+          <div class="lock-pulse"></div>
+          <button class="lock-btn-main" id="lockBtn" onclick="toggleLock()">
+            <span class="lock-btn-icon" id="lockIcon">🔒</span>
+            <span class="lock-btn-label" id="lockLabel">Bloqueado</span>
+          </button>
         </div>
-        <div class="status-dot green"></div>
+
+        <div class="lock-sub-row">
+          <button class="lock-sub-btn" onclick="pulseOpen()">
+            ⚡ Abrir rápido
+          </button>
+          <button class="lock-sub-btn" onclick="toggleAlert()">
+            🔔 Alertas
+          </button>
+        </div>
       </div>
 
-      <!-- Lock control -->
-      <div class="section-sub">Acceso</div>
-      <div class="lock-btn-wrap">
-        <button class="lock-btn open" onclick="openLock()">
-          <span class="btn-icon">🔓</span>
-          Abrir
-        </button>
-        <button class="lock-btn lock" onclick="">
-          <span class="btn-icon">🔒</span>
-          Cerrado
-        </button>
-      </div>
-
-      <!-- Quick actions -->
-      <div class="section-sub">Acciones rápidas</div>
-      <div class="action-grid">
-        <button class="action-card" onclick="toggleAlert()">
-          <div class="action-icon orange">⚡</div>
-          <div>
-            <h3>Energía</h3>
-            <p>Zona 1 encendida</p>
-          </div>
-        </button>
-        <button class="action-card" onclick="">
-          <div class="action-icon teal">❄️</div>
-          <div>
-            <h3>Aire</h3>
-            <p>Apagado</p>
-          </div>
-        </button>
-        <button class="action-card" onclick="">
-          <div class="action-icon purple">👤</div>
-          <div>
-            <h3>Inquilino</h3>
-            <p>Activo</p>
-          </div>
-        </button>
-        <button class="action-card" onclick="">
-          <div class="action-icon blue">📊</div>
-          <div>
-            <h3>Consumo</h3>
-            <p>1.2 kWh hoy</p>
-          </div>
-        </button>
+      <!-- Stats row -->
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-label">Energía</div>
+          <div class="stat-value">1.2<span class="stat-unit"> kWh</span></div>
+          <div class="stat-unit" style="color:var(--green)">↓ normal</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Accesos</div>
+          <div class="stat-value">3</div>
+          <div class="stat-unit">hoy</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Módulo</div>
+          <div class="stat-value" style="font-size:17px;color:var(--green)">Online</div>
+          <div class="stat-unit">hace 2 min</div>
+        </div>
       </div>
 
       <!-- Sensors -->
-      <div class="section-sub">Sensores</div>
-      <div class="list-card">
-        <div class="list-row">
-          <div class="row-icon blue">🚪</div>
-          <div class="row-label">Puerta entrada<br><span class="row-sub">Sensor magnético</span></div>
-          <span class="row-value ok">Cerrada</span>
+      <div class="section-label">Sensores</div>
+      <div class="sensor-grid">
+        <div class="sensor-card">
+          <div class="sensor-dot ok"></div>
+          <div class="sensor-icon">🚪</div>
+          <div class="sensor-info">
+            <div class="sensor-name">Puerta entrada</div>
+            <div class="sensor-status ok">Cerrada</div>
+          </div>
         </div>
-        <div class="list-row">
-          <div class="row-icon blue">🪟</div>
-          <div class="row-label">Ventana principal<br><span class="row-sub">Sensor magnético</span></div>
-          <span class="row-value ok">Cerrada</span>
+        <div class="sensor-card">
+          <div class="sensor-dot ok"></div>
+          <div class="sensor-icon">🪟</div>
+          <div class="sensor-info">
+            <div class="sensor-name">Ventana</div>
+            <div class="sensor-status ok">Cerrada</div>
+          </div>
         </div>
-        <div class="list-row">
-          <div class="row-icon orange">🔥</div>
-          <div class="row-label">Detector de humo<br><span class="row-sub">Cocina</span></div>
-          <span class="row-value ok">Normal</span>
+        <div class="sensor-card">
+          <div class="sensor-dot ok"></div>
+          <div class="sensor-icon">🔥</div>
+          <div class="sensor-info">
+            <div class="sensor-name">Humo</div>
+            <div class="sensor-status ok">Normal</div>
+          </div>
         </div>
-        <div class="list-row">
-          <div class="row-icon teal">💧</div>
-          <div class="row-label">Sensor de agua<br><span class="row-sub">Baño principal</span></div>
-          <span class="row-value ok">Normal</span>
+        <div class="sensor-card">
+          <div class="sensor-dot ok"></div>
+          <div class="sensor-icon">💧</div>
+          <div class="sensor-info">
+            <div class="sensor-name">Agua</div>
+            <div class="sensor-status ok">Normal</div>
+          </div>
         </div>
       </div>
+
+      <!-- Energy -->
+      <div class="section-label">Energía</div>
+      <div class="energy-card">
+        <div class="energy-icon">⚡</div>
+        <div class="energy-info">
+          <div class="energy-title">Control de zonas</div>
+          <div class="energy-sub">Dpto 3B — Palermo</div>
+        </div>
+        <div class="energy-toggles">
+          <div class="energy-row">
+            <label class="mini-toggle">
+              <input type="checkbox" checked>
+              <div class="mini-track"></div>
+            </label>
+            Zona 1
+          </div>
+          <div class="energy-row">
+            <label class="mini-toggle">
+              <input type="checkbox">
+              <div class="mini-track"></div>
+            </label>
+            Aire
+          </div>
+        </div>
+      </div>
+      <div style="height:16px"></div>
 
     </div>
-  </div>
 
-  <!-- TAB: Inquilino -->
-  <div id="tab-tenant" class="tab-panel" style="display:none">
-    <div class="scroll-content">
-      <div class="section-header">Inquilino</div>
+    <!-- ── INQUILINO ──────────────────────────────────── -->
+    <div id="panel-tenant" class="panel">
 
-      <div class="tenant-card">
-        <div class="tenant-avatar">M</div>
-        <div class="tenant-info">
-          <h3>Martín García</h3>
-          <p>+54 9 11 5555-1234 · Desde ene 2025</p>
+      <div class="tenant-hero">
+        <div class="avatar">M</div>
+        <div class="tenant-meta">
+          <div class="tenant-name">Martín García</div>
+          <div class="tenant-since">+54 9 11 5555-1234 · Desde ene 2025</div>
         </div>
-        <span class="tenant-badge">Activo</span>
+        <span class="badge-active">Activo</span>
       </div>
 
-      <div class="section-sub">Acceso remoto</div>
+      <div class="section-label">Permisos</div>
       <div class="list-card">
         <div class="list-row">
-          <div class="row-icon green">🔑</div>
-          <div class="row-label">Acceso a la propiedad<br><span class="row-sub">Puede abrir la cerradura</span></div>
-          <label class="toggle">
+          <div class="row-ico green">🔑</div>
+          <div class="row-text">
+            <div class="row-main">Acceso a la propiedad</div>
+            <div class="row-hint">Puede abrir la cerradura</div>
+          </div>
+          <label class="mini-toggle">
             <input type="checkbox" checked>
-            <div class="toggle-track"></div>
+            <div class="mini-track"></div>
           </label>
         </div>
         <div class="list-row">
-          <div class="row-icon orange">⚡</div>
-          <div class="row-label">Control de energía<br><span class="row-sub">Puede encender/apagar</span></div>
-          <label class="toggle">
+          <div class="row-ico orange">⚡</div>
+          <div class="row-text">
+            <div class="row-main">Control de energía</div>
+            <div class="row-hint">Puede encender/apagar zonas</div>
+          </div>
+          <label class="mini-toggle">
             <input type="checkbox">
-            <div class="toggle-track"></div>
+            <div class="mini-track"></div>
+          </label>
+        </div>
+        <div class="list-row">
+          <div class="row-ico blue">📊</div>
+          <div class="row-text">
+            <div class="row-main">Ver historial</div>
+            <div class="row-hint">Accede al registro de eventos</div>
+          </div>
+          <label class="mini-toggle">
+            <input type="checkbox" checked>
+            <div class="mini-track"></div>
           </label>
         </div>
       </div>
 
-      <div class="section-sub">Acciones</div>
-      <div class="list-card">
-        <div class="list-row" style="color:var(--red)">
-          <div class="row-icon red">🚫</div>
-          <div class="row-label" style="color:var(--red)">Dar de baja inquilino</div>
-        </div>
-        <div class="list-row">
-          <div class="row-icon blue">📱</div>
-          <div class="row-label">Enviar acceso por WhatsApp</div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- TAB: Historial -->
-  <div id="tab-history" class="tab-panel" style="display:none">
-    <div class="scroll-content">
-      <div class="section-header">Historial</div>
+      <div class="section-label">Acciones</div>
       <div class="list-card">
         <div class="list-row">
-          <div class="row-icon green">🔓</div>
-          <div class="row-label">Puerta abierta<br><span class="row-sub">Hoy, 14:32</span></div>
+          <div class="row-ico blue">📱</div>
+          <div class="row-text">
+            <div class="row-main">Enviar acceso por WhatsApp</div>
+          </div>
+          <span class="row-chevron">›</span>
         </div>
         <div class="list-row">
-          <div class="row-icon blue">🚪</div>
-          <div class="row-label">Puerta cerrada<br><span class="row-sub">Hoy, 14:32</span></div>
+          <div class="row-ico purple">🕐</div>
+          <div class="row-text">
+            <div class="row-main">Acceso temporal (1 hora)</div>
+          </div>
+          <span class="row-chevron">›</span>
         </div>
         <div class="list-row">
-          <div class="row-icon green">🔓</div>
-          <div class="row-label">Puerta abierta<br><span class="row-sub">Hoy, 08:15</span></div>
-        </div>
-        <div class="list-row">
-          <div class="row-icon blue">🚪</div>
-          <div class="row-label">Puerta cerrada<br><span class="row-sub">Hoy, 08:16</span></div>
-        </div>
-        <div class="list-row">
-          <div class="row-icon orange">⚡</div>
-          <div class="row-label">Energía encendida<br><span class="row-sub">Ayer, 07:00</span></div>
-        </div>
-        <div class="list-row">
-          <div class="row-icon orange">⚡</div>
-          <div class="row-label">Energía apagada<br><span class="row-sub">Ayer, 23:01</span></div>
+          <div class="row-ico red">🚫</div>
+          <div class="row-text">
+            <div class="row-main" style="color:var(--red)">Dar de baja</div>
+            <div class="row-hint">Corta energía y bloquea acceso</div>
+          </div>
+          <span class="row-chevron">›</span>
         </div>
       </div>
+      <div style="height:16px"></div>
+
     </div>
-  </div>
 
-  <!-- TAB: Propiedades -->
-  <div id="tab-properties" class="tab-panel" style="display:none">
-    <div class="scroll-content">
-      <div class="section-header">Mis propiedades</div>
-
-      <div class="hero-card" onclick="switchTab('home')" style="cursor:pointer">
-        <div class="hero-icon green">🏢</div>
-        <div class="hero-text">
-          <h2>Dpto 3B — Palermo</h2>
-          <p>Inquilino: Martín García · Online</p>
+    <!-- ── HISTORIAL ──────────────────────────────────── -->
+    <div id="panel-history" class="panel">
+      <div class="section-label" style="margin-top:16px">Últimas 24 horas</div>
+      <div class="list-card">
+        <div class="timeline-item">
+          <div class="timeline-icon" style="background:rgba(52,199,89,0.12)">🔓</div>
+          <div class="timeline-body">
+            <div class="timeline-title">Puerta abierta</div>
+            <div class="timeline-time">Hoy, 14:32 · Cerradura app</div>
+          </div>
         </div>
-        <div class="status-dot green"></div>
-      </div>
-
-      <div class="hero-card" style="cursor:pointer">
-        <div class="hero-icon green">🏠</div>
-        <div class="hero-text">
-          <h2>Casa — San Isidro</h2>
-          <p>Desocupada · Online</p>
+        <div class="timeline-item">
+          <div class="timeline-icon" style="background:rgba(0,122,255,0.10)">🚪</div>
+          <div class="timeline-body">
+            <div class="timeline-title">Puerta cerrada</div>
+            <div class="timeline-time">Hoy, 14:33</div>
+          </div>
         </div>
-        <div class="status-dot orange"></div>
-      </div>
-
-      <div class="hero-card" style="cursor:pointer;opacity:0.6">
-        <div class="hero-icon red">🏗️</div>
-        <div class="hero-text">
-          <h2>Local — Microcentro</h2>
-          <p>Sin módulo instalado</p>
+        <div class="timeline-item">
+          <div class="timeline-icon" style="background:rgba(52,199,89,0.12)">🔓</div>
+          <div class="timeline-body">
+            <div class="timeline-title">Puerta abierta</div>
+            <div class="timeline-time">Hoy, 08:15 · Cerradura app</div>
+          </div>
         </div>
-        <div class="status-dot red"></div>
+        <div class="timeline-item">
+          <div class="timeline-icon" style="background:rgba(255,149,0,0.12)">⚡</div>
+          <div class="timeline-body">
+            <div class="timeline-title">Energía zona 1 — encendida</div>
+            <div class="timeline-time">Hoy, 07:00 · Automático</div>
+          </div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-icon" style="background:rgba(255,149,0,0.12)">⚡</div>
+          <div class="timeline-body">
+            <div class="timeline-title">Energía zona 1 — apagada</div>
+            <div class="timeline-time">Ayer, 23:01 · Automático</div>
+          </div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-icon" style="background:rgba(52,199,89,0.12)">🔓</div>
+          <div class="timeline-body">
+            <div class="timeline-title">Puerta abierta</div>
+            <div class="timeline-time">Ayer, 19:45 · Cerradura app</div>
+          </div>
+        </div>
       </div>
-
-      <button class="btn-primary" style="margin-top:8px">+ Agregar propiedad</button>
+      <div style="height:16px"></div>
     </div>
-  </div>
+
+    <!-- ── PROPIEDADES ────────────────────────────────── -->
+    <div id="panel-properties" class="panel">
+      <div class="section-label" style="margin-top:16px">Mis propiedades</div>
+
+      <div class="prop-card" onclick="switchPanel('home')">
+        <div class="prop-thumb green">🏢</div>
+        <div class="prop-info">
+          <div class="prop-name">Dpto 3B — Palermo</div>
+          <div class="prop-meta">Martín García · Online</div>
+        </div>
+        <div class="prop-status-dot green"></div>
+      </div>
+
+      <div class="prop-card">
+        <div class="prop-thumb orange">🏠</div>
+        <div class="prop-info">
+          <div class="prop-name">Casa — San Isidro</div>
+          <div class="prop-meta">Desocupada · Online</div>
+        </div>
+        <div class="prop-status-dot orange"></div>
+      </div>
+
+      <div class="prop-card" style="opacity:0.55">
+        <div class="prop-thumb gray">🏗️</div>
+        <div class="prop-info">
+          <div class="prop-name">Local — Microcentro</div>
+          <div class="prop-meta">Sin módulo instalado</div>
+        </div>
+        <div class="prop-status-dot gray"></div>
+      </div>
+
+      <div style="padding:0 16px;margin-top:4px">
+        <button class="btn-cta">+ Agregar propiedad</button>
+      </div>
+      <div style="height:16px"></div>
+    </div>
+
+  </div><!-- panels-wrap -->
 
   <!-- Tab bar -->
-  <div class="tab-bar">
-    <button class="tab-item active" id="tab-btn-home" onclick="switchTab('home')">
-      <span class="tab-icon">🏠</span>
-      <span class="tab-label">Inicio</span>
+  <div class="tabbar">
+    <button class="tab active" id="tab-home" onclick="switchPanel('home')">
+      <span class="tab-ico">🏠</span>
+      <span class="tab-lbl">Inicio</span>
     </button>
-    <button class="tab-item" id="tab-btn-tenant" onclick="switchTab('tenant')">
-      <span class="tab-icon">👤</span>
-      <span class="tab-label">Inquilino</span>
+    <button class="tab" id="tab-tenant" onclick="switchPanel('tenant')">
+      <span class="tab-ico">👤</span>
+      <span class="tab-lbl">Inquilino</span>
     </button>
-    <button class="tab-item" id="tab-btn-history" onclick="switchTab('history')">
-      <span class="tab-icon">📋</span>
-      <span class="tab-label">Historial</span>
+    <button class="tab" id="tab-history" onclick="switchPanel('history')">
+      <span class="tab-ico">📋</span>
+      <span class="tab-lbl">Historial</span>
     </button>
-    <button class="tab-item" id="tab-btn-properties" onclick="switchTab('properties')">
-      <span class="tab-icon">🏘️</span>
-      <span class="tab-label">Propiedades</span>
+    <button class="tab" id="tab-properties" onclick="switchPanel('properties')">
+      <span class="tab-ico">🏘️</span>
+      <span class="tab-lbl">Propiedades</span>
     </button>
   </div>
 
-</div>
+</div><!-- screen-main -->
 
 <script>
+/* ── Navigation ──────────────────────────────────────── */
 function showMain() {
   document.getElementById('screen-login').classList.remove('active');
   document.getElementById('screen-main').classList.add('active');
 }
-
 function showLogin() {
   document.getElementById('screen-main').classList.remove('active');
   document.getElementById('screen-login').classList.add('active');
 }
-
-function switchTab(name) {
-  document.querySelectorAll('.tab-panel').forEach(p => p.style.display = 'none');
-  document.querySelectorAll('.tab-item').forEach(b => b.classList.remove('active'));
-  document.getElementById('tab-' + name).style.display = 'block';
-  document.getElementById('tab-btn-' + name).classList.add('active');
+function switchPanel(name) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('panel-' + name).classList.add('active');
+  document.getElementById('tab-' + name).classList.add('active');
+  document.querySelector('.panels-wrap').scrollTop = 0;
 }
 
-function openLock() {
-  const btn = event.currentTarget;
-  btn.style.background = 'linear-gradient(135deg, #28A745, #1E7E34)';
-  btn.querySelector('.btn-icon').textContent = '🔓';
+/* ── Lock ────────────────────────────────────────────── */
+let locked = true;
+function toggleLock() {
+  locked = !locked;
+  const btn  = document.getElementById('lockBtn');
+  const icon = document.getElementById('lockIcon');
+  const lbl  = document.getElementById('lockLabel');
+  const ring = document.getElementById('lockRing');
+  if (!locked) {
+    btn.classList.add('unlocked');
+    ring.classList.add('unlocked');
+    icon.textContent = '🔓';
+    lbl.textContent  = 'Abierto';
+    setTimeout(() => {
+      locked = true;
+      btn.classList.remove('unlocked');
+      ring.classList.remove('unlocked');
+      icon.textContent = '🔒';
+      lbl.textContent  = 'Bloqueado';
+    }, 4000);
+  }
+}
+
+function pulseOpen() {
+  locked = false;
+  const btn  = document.getElementById('lockBtn');
+  const icon = document.getElementById('lockIcon');
+  const lbl  = document.getElementById('lockLabel');
+  const ring = document.getElementById('lockRing');
+  btn.classList.add('unlocked');
+  ring.classList.add('unlocked');
+  icon.textContent = '🔓';
+  lbl.textContent  = 'Abierto';
   setTimeout(() => {
-    btn.style.background = 'linear-gradient(135deg, #34C759, #28A745)';
+    locked = true;
+    btn.classList.remove('unlocked');
+    ring.classList.remove('unlocked');
+    icon.textContent = '🔒';
+    lbl.textContent  = 'Bloqueado';
   }, 3000);
 }
 
-let alertVisible = false;
+/* ── Alert ───────────────────────────────────────────── */
+let alertOn = false;
 function toggleAlert() {
-  alertVisible = !alertVisible;
-  const banner = document.getElementById('alertBanner');
-  banner.classList.toggle('hidden', !alertVisible);
-  if (alertVisible) {
-    document.getElementById('alertText').textContent = 'Puerta abierta hace 8 minutos';
-  }
+  alertOn = !alertOn;
+  document.getElementById('alertStrip').classList.toggle('hidden', !alertOn);
 }
 </script>
 </body>
