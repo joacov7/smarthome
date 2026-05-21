@@ -755,6 +755,150 @@ body {
   padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
   flex-shrink: 0;
 }
+
+/* ══ BOTTOM SHEET ═══════════════════════════════════════ */
+.sheet-overlay {
+  position: fixed; inset: 0; z-index: 299;
+  background: rgba(0,0,0,0.35);
+  opacity: 0; pointer-events: none;
+  transition: opacity .3s;
+}
+.sheet-overlay.visible { opacity: 1; pointer-events: auto; }
+
+.sheet {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 300;
+  background: var(--bg);
+  border-radius: 22px 22px 0 0;
+  max-height: 92vh; display: flex; flex-direction: column;
+  transform: translateY(100%);
+  transition: transform .35s cubic-bezier(.25,.46,.45,.94);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.sheet.open { transform: none; }
+
+.sheet-handle {
+  width: 36px; height: 5px; border-radius: 3px;
+  background: #D1D1D6; margin: 10px auto 0;
+  flex-shrink: 0;
+}
+.sheet-header {
+  padding: 16px 20px 12px;
+  display: flex; align-items: center; justify-content: space-between;
+  flex-shrink: 0; border-bottom: 1px solid var(--sep);
+}
+.sheet-title { font-size: 17px; font-weight: 700; }
+.sheet-close {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: var(--card2); border: none;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--label3); font-size: 16px; cursor: pointer;
+  line-height: 1;
+}
+.sheet-body { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 20px; }
+.sheet-footer {
+  padding: 12px 20px;
+  flex-shrink: 0; border-top: 1px solid var(--sep);
+}
+
+/* ── Sheet field ─────────────────────────────────────── */
+.sh-label {
+  font-size: 12px; font-weight: 600; color: var(--label3);
+  text-transform: uppercase; letter-spacing: .05em;
+  margin-bottom: 8px; margin-top: 20px; display: block;
+}
+.sh-label:first-child { margin-top: 0; }
+.sh-group {
+  background: var(--card); border-radius: var(--r);
+  overflow: hidden; box-shadow: var(--shadow-sm);
+}
+.sh-field {
+  display: block; width: 100%; padding: 14px 16px;
+  font-family: var(--font); font-size: 16px; color: var(--label1);
+  background: transparent; border: none; outline: none;
+  -webkit-appearance: none;
+}
+.sh-field + .sh-field { border-top: 1px solid var(--sep); }
+.sh-field::placeholder { color: var(--label3); }
+
+/* ── Alta de inquilino (name avatar preview) ─────────── */
+.alta-avatar {
+  width: 68px; height: 68px; border-radius: 50%;
+  background: linear-gradient(135deg,#007AFF,#5AC8FA);
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-size: 28px; font-weight: 700;
+  margin: 0 auto 4px;
+}
+.alta-name-preview {
+  font-size: 16px; font-weight: 600; text-align: center;
+  color: var(--label1); min-height: 24px;
+}
+
+/* ── Tenant empty state ──────────────────────────────── */
+.tenant-empty {
+  display: flex; flex-direction: column; align-items: center;
+  padding: 56px 24px 24px; gap: 10px;
+  text-align: center;
+}
+.tenant-empty-icon {
+  width: 88px; height: 88px; border-radius: 50%;
+  background: var(--card2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 40px; margin-bottom: 8px;
+}
+.tenant-empty-title { font-size: 20px; font-weight: 700; }
+.tenant-empty-sub   { font-size: 15px; color: var(--label3); margin-bottom: 8px; line-height: 1.4; }
+
+/* ── Settings sections ───────────────────────────────── */
+.settings-section {
+  font-size: 12px; font-weight: 600; color: var(--label3);
+  text-transform: uppercase; letter-spacing: .05em;
+  margin: 24px 0 8px; display: block;
+}
+.settings-section:first-child { margin-top: 0; }
+
+.plan-card {
+  background: linear-gradient(135deg, #007AFF 0%, #5856D6 100%);
+  border-radius: 14px; padding: 16px;
+  display: flex; align-items: center; gap: 14px; margin-bottom: 20px;
+}
+.plan-badge {
+  background: rgba(255,255,255,.22); border-radius: 8px;
+  padding: 6px 12px; font-size: 13px; font-weight: 700; color: white;
+  white-space: nowrap;
+}
+.plan-info-title { font-size: 15px; font-weight: 700; color: white; }
+.plan-info-sub   { font-size: 13px; color: rgba(255,255,255,.7); margin-top: 2px; }
+.plan-chevron    { color: rgba(255,255,255,.6); font-size: 20px; margin-left: auto; }
+
+/* ── Baja confirm dialog ─────────────────────────────── */
+.baja-dialog {
+  position: fixed; inset: 0; z-index: 400;
+  display: flex; align-items: flex-end; justify-content: center;
+  opacity: 0; pointer-events: none; transition: opacity .2s;
+  padding: 0 8px;
+}
+.baja-dialog.open { opacity: 1; pointer-events: auto; }
+.baja-dialog-bg {
+  position: absolute; inset: 0; background: rgba(0,0,0,.4);
+}
+.baja-box {
+  position: relative; z-index: 1; width: 100%;
+  background: var(--card); border-radius: 20px 20px 0 0;
+  padding: 24px 20px;
+  padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+  transform: translateY(100%); transition: transform .3s cubic-bezier(.25,.46,.45,.94);
+}
+.baja-dialog.open .baja-box { transform: none; }
+.baja-title { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+.baja-sub   { font-size: 14px; color: var(--label3); line-height: 1.4; margin-bottom: 20px; }
+.baja-btn-row { display: flex; gap: 10px; }
+.baja-btn {
+  flex: 1; padding: 14px; border: none; border-radius: 14px;
+  font-family: var(--font); font-size: 16px; font-weight: 600; cursor: pointer;
+}
+.baja-btn.cancel { background: var(--card2); color: var(--label1); }
+.baja-btn.confirm { background: var(--red); color: white; }
+.baja-btn:active { opacity: .85; }
 </style>
 </head>
 <body>
@@ -790,12 +934,11 @@ body {
       <span class="prop-pill-dot"></span>
       Dpto 3B — Palermo ▾
     </button>
-    <button class="topbar-icon" onclick="showLogin()">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-           stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
-        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-        <polyline points="16 17 21 12 16 7"/>
-        <line x1="21" y1="12" x2="9" y2="12"/>
+    <button class="topbar-icon" onclick="openSheet('settings')">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
       </svg>
     </button>
   </div>
@@ -961,11 +1104,33 @@ body {
     <!-- ── INQUILINO ──────────────────────────────────── -->
     <div id="panel-tenant" class="panel">
 
+      <!-- Empty state -->
+      <div class="tenant-empty" id="tenantEmptyState" style="display:none">
+        <div class="tenant-empty-icon">👤</div>
+        <div class="tenant-empty-title">Sin inquilino activo</div>
+        <div class="tenant-empty-sub">La propiedad está desocupada.<br>Podés dar de alta un nuevo inquilino.</div>
+        <button class="btn-cta" style="max-width:280px;margin-top:6px"
+                onclick="openSheet('alta')">Dar de alta inquilino</button>
+        <div class="section-label" style="margin-top:24px;align-self:flex-start">Acceso rápido</div>
+        <div class="list-card" style="width:100%;margin:0">
+          <div class="list-row" onclick="alert('Acceso temporal activado por 1 hora')">
+            <div class="row-ico purple">🕐</div>
+            <div class="row-text">
+              <div class="row-main">Modo visita (1 hora)</div>
+              <div class="row-hint">Activa acceso temporal sin inquilino</div>
+            </div>
+            <span class="row-chevron">›</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Active tenant -->
+      <div id="tenantFilledState">
       <div class="tenant-hero">
-        <div class="avatar">M</div>
+        <div class="avatar" id="tenantAvatar">M</div>
         <div class="tenant-meta">
-          <div class="tenant-name">Martín García</div>
-          <div class="tenant-since">+54 9 11 5555-1234 · Desde ene 2025</div>
+          <div class="tenant-name" id="tenantName">Martín García</div>
+          <div class="tenant-since" id="tenantPhone">+54 9 11 5555-1234 · Desde ene 2025</div>
         </div>
         <span class="badge-active">Activo</span>
       </div>
@@ -1024,7 +1189,7 @@ body {
           </div>
           <span class="row-chevron">›</span>
         </div>
-        <div class="list-row">
+        <div class="list-row" onclick="openBaja()">
           <div class="row-ico red">🚫</div>
           <div class="row-text">
             <div class="row-main" style="color:var(--red)">Dar de baja</div>
@@ -1049,10 +1214,11 @@ body {
         <div class="list-row">
           <div class="row-ico green">💵</div>
           <div class="row-text"><div class="row-main">Alquiler mensual</div></div>
-          <span class="row-right ok">$180.000</span>
+          <span class="row-right ok" id="tenantRent">$180.000</span>
         </div>
       </div>
       <div style="height:16px"></div>
+      </div><!-- tenantFilledState -->
     </div>
 
     <!-- ── HISTORIAL ──────────────────────────────────── -->
@@ -1470,6 +1636,165 @@ body {
 
 </div><!-- screen-onboarding -->
 
+<!-- ══ OVERLAY ════════════════════════════════════════════ -->
+<div class="sheet-overlay" id="sheetOverlay" onclick="closeAllSheets()"></div>
+
+<!-- ══ SHEET: Alta de inquilino ══════════════════════════ -->
+<div class="sheet" id="sheetAlta">
+  <div class="sheet-handle"></div>
+  <div class="sheet-header">
+    <div class="sheet-title">Nuevo inquilino</div>
+    <button class="sheet-close" onclick="closeSheet('alta')">✕</button>
+  </div>
+  <div class="sheet-body">
+    <div style="text-align:center;margin-bottom:20px">
+      <div class="alta-avatar" id="altaAvatar">?</div>
+      <div class="alta-name-preview" id="altaNamePreview">Nombre del inquilino</div>
+    </div>
+
+    <label class="sh-label">Datos personales</label>
+    <div class="sh-group">
+      <input class="sh-field" id="altaName" type="text" placeholder="Nombre completo"
+             oninput="updateAltaPreview()">
+      <input class="sh-field" id="altaPhone" type="tel" placeholder="Teléfono (+54 9 11...)">
+    </div>
+
+    <label class="sh-label">Contrato</label>
+    <div class="sh-group">
+      <input class="sh-field" id="altaStart" type="date">
+      <input class="sh-field" id="altaEnd"   type="date">
+      <input class="sh-field" id="altaRent"  type="number" placeholder="Alquiler mensual ($)">
+    </div>
+
+    <label class="sh-label">Accesos</label>
+    <div class="list-card" style="margin:0">
+      <div class="list-row">
+        <div class="row-ico green">🔑</div>
+        <div class="row-text"><div class="row-main">Cerradura</div></div>
+        <label class="mini-toggle">
+          <input type="checkbox" checked id="altaAccessLock">
+          <div class="mini-track"></div>
+        </label>
+      </div>
+      <div class="list-row">
+        <div class="row-ico orange">⚡</div>
+        <div class="row-text"><div class="row-main">Control de energía</div></div>
+        <label class="mini-toggle">
+          <input type="checkbox" id="altaAccessEnergy">
+          <div class="mini-track"></div>
+        </label>
+      </div>
+    </div>
+  </div>
+  <div class="sheet-footer">
+    <button class="btn-cta" onclick="confirmAlta()">Dar de alta</button>
+  </div>
+</div>
+
+<!-- ══ SHEET: Ajustes ════════════════════════════════════ -->
+<div class="sheet" id="sheetSettings">
+  <div class="sheet-handle"></div>
+  <div class="sheet-header">
+    <div class="sheet-title">Ajustes</div>
+    <button class="sheet-close" onclick="closeSheet('settings')">✕</button>
+  </div>
+  <div class="sheet-body">
+
+    <div class="plan-card">
+      <div class="plan-badge">PRO</div>
+      <div>
+        <div class="plan-info-title">Plan Nido Pro</div>
+        <div class="plan-info-sub">Propiedades ilimitadas · Historial 90 días</div>
+      </div>
+      <span class="plan-chevron">›</span>
+    </div>
+
+    <span class="settings-section">Propiedad activa</span>
+    <div class="list-card" style="margin:0">
+      <div class="list-row">
+        <div class="row-ico blue">🏢</div>
+        <div class="row-text">
+          <div class="row-main">Dpto 3B — Palermo</div>
+          <div class="row-hint">Módulo · Online · -68 dBm</div>
+        </div>
+        <span class="row-chevron">›</span>
+      </div>
+      <div class="list-row">
+        <div class="row-ico orange">📡</div>
+        <div class="row-text">
+          <div class="row-main">Configurar módulo</div>
+          <div class="row-hint">WiFi, canales, firmware</div>
+        </div>
+        <span class="row-chevron">›</span>
+      </div>
+    </div>
+
+    <span class="settings-section">Notificaciones</span>
+    <div class="list-card" style="margin:0">
+      <div class="list-row">
+        <div class="row-ico red">🔥</div>
+        <div class="row-text"><div class="row-main">Detector de humo</div></div>
+        <label class="mini-toggle"><input type="checkbox" checked><div class="mini-track"></div></label>
+      </div>
+      <div class="list-row">
+        <div class="row-ico blue">💧</div>
+        <div class="row-text"><div class="row-main">Sensor de agua</div></div>
+        <label class="mini-toggle"><input type="checkbox" checked><div class="mini-track"></div></label>
+      </div>
+      <div class="list-row">
+        <div class="row-ico green">🚪</div>
+        <div class="row-text">
+          <div class="row-main">Puerta abierta</div>
+          <div class="row-hint">Alerta tras 5 minutos</div>
+        </div>
+        <label class="mini-toggle"><input type="checkbox" checked><div class="mini-track"></div></label>
+      </div>
+      <div class="list-row">
+        <div class="row-ico orange">⚡</div>
+        <div class="row-text">
+          <div class="row-main">Consumo elevado</div>
+          <div class="row-hint">Umbral: 3000 W por 30 min</div>
+        </div>
+        <label class="mini-toggle"><input type="checkbox"><div class="mini-track"></div></label>
+      </div>
+      <div class="list-row">
+        <div class="row-ico purple">📡</div>
+        <div class="row-text"><div class="row-main">Módulo sin conexión</div></div>
+        <label class="mini-toggle"><input type="checkbox" checked><div class="mini-track"></div></label>
+      </div>
+    </div>
+
+    <span class="settings-section">Cuenta</span>
+    <div class="list-card" style="margin:0">
+      <div class="list-row">
+        <div class="row-ico blue">👤</div>
+        <div class="row-text">
+          <div class="row-main">propietario@email.com</div>
+          <div class="row-hint">Plan Pro · Activo</div>
+        </div>
+      </div>
+      <div class="list-row" onclick="closeSheet('settings');showLogin()">
+        <div class="row-ico" style="background:rgba(255,59,48,.10)">🚪</div>
+        <div class="row-text"><div class="row-main" style="color:var(--red)">Cerrar sesión</div></div>
+      </div>
+    </div>
+    <div style="height:8px"></div>
+  </div>
+</div>
+
+<!-- ══ BAJA CONFIRMATION ══════════════════════════════════ -->
+<div class="baja-dialog" id="bajaDialog">
+  <div class="baja-dialog-bg" onclick="closeBaja()"></div>
+  <div class="baja-box">
+    <div class="baja-title">¿Dar de baja a <span id="bajaName">Martín García</span>?</div>
+    <div class="baja-sub">Se cortará la energía y se bloqueará el acceso a la propiedad automáticamente.</div>
+    <div class="baja-btn-row">
+      <button class="baja-btn cancel"  onclick="closeBaja()">Cancelar</button>
+      <button class="baja-btn confirm" onclick="confirmBaja()">Dar de baja</button>
+    </div>
+  </div>
+</div>
+
 <script>
 /* ── Navigation ──────────────────────────────────────── */
 const panelOrder = ['home','tenant','history','properties'];
@@ -1737,6 +2062,93 @@ function startConnectionCheck() {
 function selectType(btn) {
   document.querySelectorAll('.ob-type-btn').forEach(b => b.classList.remove('selected'));
   btn.classList.add('selected');
+}
+
+/* ══ BOTTOM SHEETS ═══════════════════════════════════════ */
+let activeSheet = null;
+
+function openSheet(name) {
+  closeAllSheets();
+  const sheet = document.getElementById('sheet' + name.charAt(0).toUpperCase() + name.slice(1));
+  if (!sheet) return;
+  document.getElementById('sheetOverlay').classList.add('visible');
+  sheet.classList.add('open');
+  activeSheet = name;
+}
+
+function closeSheet(name) {
+  const sheet = document.getElementById('sheet' + name.charAt(0).toUpperCase() + name.slice(1));
+  if (sheet) sheet.classList.remove('open');
+  document.getElementById('sheetOverlay').classList.remove('visible');
+  activeSheet = null;
+}
+
+function closeAllSheets() {
+  document.querySelectorAll('.sheet').forEach(s => s.classList.remove('open'));
+  document.getElementById('sheetOverlay').classList.remove('visible');
+  activeSheet = null;
+}
+
+/* ── Alta de inquilino ───────────────────────────────── */
+let tenantActive = true; // starts with sample data visible
+
+function updateAltaPreview() {
+  const name = document.getElementById('altaName').value.trim();
+  const avatar = document.getElementById('altaAvatar');
+  const preview = document.getElementById('altaNamePreview');
+  if (name) {
+    avatar.textContent = name.charAt(0).toUpperCase();
+    preview.textContent = name;
+  } else {
+    avatar.textContent = '?';
+    preview.textContent = 'Nombre del inquilino';
+  }
+}
+
+function confirmAlta() {
+  const name  = document.getElementById('altaName').value.trim();
+  const phone = document.getElementById('altaPhone').value.trim();
+  const rent  = document.getElementById('altaRent').value.trim();
+
+  if (!name) {
+    document.getElementById('altaName').focus();
+    return;
+  }
+
+  // Update tenant panel with new data
+  document.getElementById('tenantAvatar').textContent = name.charAt(0).toUpperCase();
+  document.getElementById('tenantName').textContent   = name;
+  document.getElementById('tenantPhone').textContent  = (phone || 'Sin teléfono') + ' · Desde hoy';
+  if (rent) document.getElementById('tenantRent').textContent = '$' + parseInt(rent).toLocaleString('es-AR');
+
+  document.getElementById('bajaName').textContent = name;
+
+  setTenantActive(true);
+  closeSheet('alta');
+
+  // Clear form
+  ['altaName','altaPhone','altaStart','altaEnd','altaRent'].forEach(id =>
+    document.getElementById(id).value = '');
+  document.getElementById('altaAvatar').textContent = '?';
+  document.getElementById('altaNamePreview').textContent = 'Nombre del inquilino';
+}
+
+/* ── Baja de inquilino ───────────────────────────────── */
+function openBaja() {
+  document.getElementById('bajaDialog').classList.add('open');
+}
+function closeBaja() {
+  document.getElementById('bajaDialog').classList.remove('open');
+}
+function confirmBaja() {
+  closeBaja();
+  setTenantActive(false);
+}
+
+function setTenantActive(active) {
+  tenantActive = active;
+  document.getElementById('tenantEmptyState').style.display  = active ? 'none' : 'flex';
+  document.getElementById('tenantFilledState').style.display = active ? '' : 'none';
 }
 </script>
 </body>
