@@ -494,6 +494,267 @@ body {
 .tab-ico svg { display: block; transition: stroke-width .15s; }
 .tab.active .tab-ico svg { stroke-width: 2.3; }
 .tab-lbl { font-size: 10px; font-weight: 500; font-family: var(--font); color: inherit; }
+
+/* ══ ONBOARDING ═════════════════════════════════════════ */
+#screen-onboarding {
+  background: var(--bg);
+  flex-direction: column;
+  position: relative; overflow: hidden;
+}
+#screen-onboarding.slide-up {
+  animation: ob-slide-up .38s cubic-bezier(.25,.46,.45,.94) both;
+}
+@keyframes ob-slide-up {
+  from { transform: translateY(100%); }
+  to   { transform: none; }
+}
+
+.ob-header {
+  padding: 54px 20px 0;
+  display: flex; align-items: center; justify-content: space-between;
+  flex-shrink: 0;
+}
+.ob-back {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: var(--card2); border: none;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--blue); cursor: pointer;
+  opacity: 1; transition: opacity .2s;
+}
+.ob-back.hidden { opacity: 0; pointer-events: none; }
+.ob-skip {
+  font-family: var(--font); font-size: 15px;
+  color: var(--label3); background: none; border: none;
+  cursor: pointer; padding: 4px 0;
+  opacity: 1; transition: opacity .2s;
+}
+.ob-skip.hidden { opacity: 0; pointer-events: none; }
+
+/* Step dots */
+.ob-dots { display: flex; gap: 6px; align-items: center; }
+.ob-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: #C7C7CC; transition: all .2s;
+}
+.ob-dot.active { width: 18px; border-radius: 3px; background: var(--blue); }
+
+/* Steps container */
+.ob-steps { flex: 1; overflow: hidden; position: relative; }
+.ob-step {
+  position: absolute; inset: 0;
+  overflow-y: auto; -webkit-overflow-scrolling: touch;
+  padding: 0 24px 24px;
+  display: flex; flex-direction: column;
+  opacity: 0; pointer-events: none;
+  transition: opacity .25s, transform .28s cubic-bezier(.25,.46,.45,.94);
+}
+.ob-step.active {
+  opacity: 1; pointer-events: auto; transform: none;
+}
+.ob-step.exit-left  { transform: translateX(-40px); opacity: 0; }
+.ob-step.enter-right { transform: translateX(40px); opacity: 0; }
+
+/* Hero illustration area */
+.ob-hero {
+  display: flex; align-items: center; justify-content: center;
+  padding: 32px 0 24px;
+}
+.ob-hero-circle {
+  width: 120px; height: 120px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 52px;
+}
+.ob-hero-circle.blue   { background: rgba(0,122,255,.10); }
+.ob-hero-circle.green  { background: rgba(52,199,89,.10); }
+.ob-hero-circle.orange { background: rgba(255,149,0,.10); }
+.ob-hero-circle.purple { background: rgba(175,82,222,.10); }
+
+/* Step titles */
+.ob-title {
+  font-size: 26px; font-weight: 700; letter-spacing: -.6px;
+  text-align: center; color: var(--label1); line-height: 1.2;
+}
+.ob-subtitle {
+  font-size: 15px; color: var(--label3); text-align: center;
+  margin-top: 10px; line-height: 1.5;
+}
+
+/* Feature pills (step 0) */
+.ob-features {
+  display: flex; flex-direction: column; gap: 10px;
+  margin-top: 28px;
+}
+.ob-feature-row {
+  background: var(--card); border-radius: 14px;
+  padding: 14px 16px; box-shadow: var(--shadow-sm);
+  display: flex; align-items: center; gap: 14px;
+}
+.ob-feature-ico {
+  width: 40px; height: 40px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center; font-size: 20px;
+  flex-shrink: 0;
+}
+.ob-feature-title { font-size: 15px; font-weight: 600; }
+.ob-feature-sub   { font-size: 13px; color: var(--label3); margin-top: 2px; }
+
+/* Type selector (step 1) */
+.ob-type-row {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 10px; margin-top: 20px;
+}
+.ob-type-btn {
+  background: var(--card); border: 2px solid transparent;
+  border-radius: 14px; padding: 16px 12px;
+  box-shadow: var(--shadow-sm);
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  cursor: pointer; transition: border-color .15s, background .15s;
+  font-family: var(--font);
+}
+.ob-type-btn.selected {
+  border-color: var(--blue);
+  background: rgba(0,122,255,.04);
+}
+.ob-type-ico  { font-size: 28px; }
+.ob-type-lbl  { font-size: 13px; font-weight: 600; color: var(--label1); }
+
+/* Step fields */
+.ob-field-group {
+  background: var(--card); border-radius: var(--r);
+  overflow: hidden; box-shadow: var(--shadow-sm); margin-top: 20px;
+}
+.ob-field {
+  display: block; width: 100%; padding: 15px 16px;
+  font-family: var(--font); font-size: 16px; color: var(--label1);
+  background: transparent; border: none; outline: none;
+}
+.ob-field + .ob-field { border-top: 1px solid var(--sep); }
+.ob-field::placeholder { color: var(--label3); }
+.ob-field-sep { height: 1px; background: var(--sep); }
+
+/* Instruction cards (step 2) */
+.ob-steps-list {
+  display: flex; flex-direction: column; gap: 10px; margin-top: 20px;
+}
+.ob-instruction {
+  background: var(--card); border-radius: 14px;
+  padding: 14px 16px; box-shadow: var(--shadow-sm);
+  display: flex; gap: 14px; align-items: flex-start;
+}
+.ob-num {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: var(--blue); color: white;
+  font-size: 14px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; margin-top: 1px;
+}
+.ob-instruction-text { flex: 1; }
+.ob-instruction-title { font-size: 15px; font-weight: 600; }
+.ob-instruction-sub   { font-size: 13px; color: var(--label3); margin-top: 3px; line-height: 1.4; }
+
+/* WiFi note */
+.ob-note {
+  background: rgba(0,122,255,.06); border-radius: 10px;
+  padding: 12px 14px; margin-top: 16px;
+  display: flex; gap: 10px; align-items: flex-start;
+  font-size: 13px; color: var(--label2); line-height: 1.4;
+}
+.ob-note-ico { flex-shrink: 0; margin-top: 1px; }
+
+/* Relay assignment (step 4) */
+.ob-relay-list {
+  background: var(--card); border-radius: var(--r);
+  overflow: hidden; box-shadow: var(--shadow-sm); margin-top: 20px;
+}
+.ob-relay-row {
+  display: flex; align-items: center;
+  padding: 13px 16px; gap: 12px;
+}
+.ob-relay-row + .ob-relay-row { border-top: 1px solid var(--sep); }
+.ob-relay-num {
+  width: 30px; height: 30px; border-radius: 8px;
+  background: rgba(0,122,255,.10);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700; color: var(--blue); flex-shrink: 0;
+}
+.ob-relay-label { flex: 1; font-size: 15px; }
+.ob-relay-select {
+  font-family: var(--font); font-size: 14px; font-weight: 500;
+  color: var(--blue); background: rgba(0,122,255,.08);
+  border: none; border-radius: 8px; padding: 6px 10px;
+  cursor: pointer; outline: none;
+}
+
+/* Checking animation (step 5) */
+.ob-checking {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; flex: 1; gap: 24px; padding-top: 20px;
+}
+.ob-spinner-wrap {
+  width: 100px; height: 100px; position: relative;
+  display: flex; align-items: center; justify-content: center;
+}
+.ob-spinner {
+  width: 100px; height: 100px; border-radius: 50%;
+  border: 3px solid rgba(0,0,0,.06);
+  border-top-color: var(--blue);
+  animation: spin 1s linear infinite;
+  position: absolute;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.ob-check-circle {
+  width: 100px; height: 100px; border-radius: 50%;
+  background: rgba(52,199,89,.12);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 44px;
+  opacity: 0; transform: scale(.6);
+  transition: opacity .4s, transform .4s cubic-bezier(.34,1.56,.64,1);
+}
+.ob-check-circle.show { opacity: 1; transform: scale(1); }
+.ob-check-circle.show + .ob-spinner { display: none; }
+
+.ob-checking-title {
+  font-size: 20px; font-weight: 700; text-align: center;
+}
+.ob-checking-sub {
+  font-size: 14px; color: var(--label3); text-align: center;
+}
+.ob-wifi-pill {
+  background: var(--card); border-radius: 20px;
+  padding: 8px 16px; box-shadow: var(--shadow-sm);
+  font-size: 13px; color: var(--label3); display: flex; align-items: center; gap: 8px;
+}
+.ob-wifi-pill-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green);
+  box-shadow: 0 0 5px rgba(52,199,89,.5); }
+
+/* Success (step 6) */
+.ob-success-icon {
+  width: 100px; height: 100px; border-radius: 50%;
+  background: rgba(52,199,89,.12);
+  display: flex; align-items: center; justify-content: center; font-size: 48px;
+  margin: 0 auto 20px;
+}
+.ob-prop-chip {
+  background: var(--card); border-radius: 12px;
+  padding: 10px 16px; box-shadow: var(--shadow-sm);
+  font-size: 15px; font-weight: 600;
+  display: flex; align-items: center; gap: 8px;
+  margin: 16px auto 0; width: fit-content;
+}
+.ob-summary {
+  background: var(--card); border-radius: var(--r);
+  overflow: hidden; box-shadow: var(--shadow-sm); margin-top: 20px;
+}
+.ob-summary-row {
+  display: flex; align-items: center; gap: 12px; padding: 13px 16px;
+}
+.ob-summary-row + .ob-summary-row { border-top: 1px solid var(--sep); }
+
+/* Footer */
+.ob-footer {
+  padding: 12px 24px;
+  padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+  flex-shrink: 0;
+}
 </style>
 </head>
 <body>
@@ -888,7 +1149,7 @@ body {
       </div>
 
       <div style="padding:0 16px;margin-top:4px">
-        <button class="btn-cta">+ Agregar propiedad</button>
+        <button class="btn-cta" onclick="startOnboarding()">+ Agregar propiedad</button>
       </div>
       <div style="height:16px"></div>
     </div>
@@ -947,6 +1208,267 @@ body {
   </div>
 
 </div><!-- screen-main -->
+
+<!-- ══ ONBOARDING ══════════════════════════════════════════ -->
+<div id="screen-onboarding" class="screen">
+
+  <!-- Header -->
+  <div class="ob-header">
+    <button class="ob-back hidden" id="obBack" onclick="obPrev()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M15 18l-6-6 6-6"/>
+      </svg>
+    </button>
+    <div class="ob-dots" id="obDots"></div>
+    <button class="ob-skip" id="obSkip" onclick="obClose()">Omitir</button>
+  </div>
+
+  <!-- Steps -->
+  <div class="ob-steps" id="obSteps">
+
+    <!-- 0: Bienvenida -->
+    <div class="ob-step active" id="ob-step-0">
+      <div class="ob-hero">
+        <div class="ob-hero-circle blue">🏠</div>
+      </div>
+      <div class="ob-title">Bienvenido a Nido</div>
+      <div class="ob-subtitle">Todo lo que necesitás para gestionar tu propiedad desde el celular.</div>
+      <div class="ob-features">
+        <div class="ob-feature-row">
+          <div class="ob-feature-ico" style="background:rgba(0,122,255,.10)">🔒</div>
+          <div>
+            <div class="ob-feature-title">Cerradura inteligente</div>
+            <div class="ob-feature-sub">Abrí y cerrá a distancia, con auto-bloqueo</div>
+          </div>
+        </div>
+        <div class="ob-feature-row">
+          <div class="ob-feature-ico" style="background:rgba(255,149,0,.10)">⚡</div>
+          <div>
+            <div class="ob-feature-title">Control de energía</div>
+            <div class="ob-feature-sub">Cortá la luz al dar de baja un inquilino</div>
+          </div>
+        </div>
+        <div class="ob-feature-row">
+          <div class="ob-feature-ico" style="background:rgba(255,59,48,.10)">🔔</div>
+          <div>
+            <div class="ob-feature-title">Alertas en tiempo real</div>
+            <div class="ob-feature-sub">Humo, agua, movimiento y mucho más</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 1: Tu propiedad -->
+    <div class="ob-step" id="ob-step-1">
+      <div class="ob-hero">
+        <div class="ob-hero-circle blue">🏢</div>
+      </div>
+      <div class="ob-title">Tu propiedad</div>
+      <div class="ob-subtitle">Completá los datos básicos para empezar.</div>
+      <div class="ob-type-row">
+        <button class="ob-type-btn selected" onclick="selectType(this,'depto')">
+          <span class="ob-type-ico">🏢</span>
+          <span class="ob-type-lbl">Departamento</span>
+        </button>
+        <button class="ob-type-btn" onclick="selectType(this,'casa')">
+          <span class="ob-type-ico">🏠</span>
+          <span class="ob-type-lbl">Casa</span>
+        </button>
+        <button class="ob-type-btn" onclick="selectType(this,'local')">
+          <span class="ob-type-ico">🏪</span>
+          <span class="ob-type-lbl">Local</span>
+        </button>
+        <button class="ob-type-btn" onclick="selectType(this,'otro')">
+          <span class="ob-type-ico">📦</span>
+          <span class="ob-type-lbl">Otro</span>
+        </button>
+      </div>
+      <div class="ob-field-group">
+        <input class="ob-field" id="obPropName" type="text"
+               placeholder="Nombre (ej. Dpto 3B — Palermo)">
+        <div class="ob-field-sep"></div>
+        <input class="ob-field" id="obAddress" type="text"
+               placeholder="Dirección (ej. Av. Corrientes 1234, CABA)">
+      </div>
+    </div>
+
+    <!-- 2: Encender módulo -->
+    <div class="ob-step" id="ob-step-2">
+      <div class="ob-hero">
+        <div class="ob-hero-circle orange">📡</div>
+      </div>
+      <div class="ob-title">Activá el módulo</div>
+      <div class="ob-subtitle">Seguí estos pasos para poner el módulo en modo configuración.</div>
+      <div class="ob-steps-list">
+        <div class="ob-instruction">
+          <div class="ob-num">1</div>
+          <div class="ob-instruction-text">
+            <div class="ob-instruction-title">Conectá el módulo a corriente</div>
+            <div class="ob-instruction-sub">Usá un cargador USB 5V. El LED se encenderá en rojo.</div>
+          </div>
+        </div>
+        <div class="ob-instruction">
+          <div class="ob-num">2</div>
+          <div class="ob-instruction-text">
+            <div class="ob-instruction-title">Esperá el LED azul parpadeante</div>
+            <div class="ob-instruction-sub">Tarda unos 10 segundos. Indica que el módulo está listo para configurar.</div>
+          </div>
+        </div>
+        <div class="ob-instruction">
+          <div class="ob-num">3</div>
+          <div class="ob-instruction-text">
+            <div class="ob-instruction-title">Conectate al WiFi del módulo</div>
+            <div class="ob-instruction-sub">Desde Ajustes → WiFi, buscá la red <strong>Nido_Setup_XXXX</strong>. No tiene contraseña.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3: WiFi del hogar -->
+    <div class="ob-step" id="ob-step-3">
+      <div class="ob-hero">
+        <div class="ob-hero-circle blue">📶</div>
+      </div>
+      <div class="ob-title">Red WiFi del hogar</div>
+      <div class="ob-subtitle">El módulo se conectará a esta red para funcionar.</div>
+      <div class="ob-field-group">
+        <input class="ob-field" id="obSsid" type="text"
+               placeholder="Nombre de la red WiFi" autocomplete="off">
+        <div class="ob-field-sep"></div>
+        <input class="ob-field" id="obWifiPass" type="password"
+               placeholder="Contraseña del WiFi" autocomplete="off">
+      </div>
+      <div class="ob-note">
+        <span class="ob-note-ico">🔒</span>
+        Los datos se envían directamente al módulo por WiFi local y no se almacenan en ningún servidor.
+      </div>
+    </div>
+
+    <!-- 4: Asignar canales -->
+    <div class="ob-step" id="ob-step-4">
+      <div class="ob-hero">
+        <div class="ob-hero-circle purple">⚙️</div>
+      </div>
+      <div class="ob-title">Configurar canales</div>
+      <div class="ob-subtitle">¿Qué controla cada relé del módulo?</div>
+      <div class="ob-relay-list">
+        <div class="ob-relay-row">
+          <div class="ob-relay-num">R1</div>
+          <div class="ob-relay-label">Canal 1</div>
+          <select class="ob-relay-select">
+            <option selected>Cerradura</option>
+            <option>Zona energía</option>
+            <option>Luz</option>
+            <option>Ventilador</option>
+            <option>Sin usar</option>
+          </select>
+        </div>
+        <div class="ob-relay-row">
+          <div class="ob-relay-num">R2</div>
+          <div class="ob-relay-label">Canal 2</div>
+          <select class="ob-relay-select">
+            <option>Cerradura</option>
+            <option selected>Zona energía</option>
+            <option>Luz</option>
+            <option>Ventilador</option>
+            <option>Sin usar</option>
+          </select>
+        </div>
+        <div class="ob-relay-row">
+          <div class="ob-relay-num">R3</div>
+          <div class="ob-relay-label">Canal 3</div>
+          <select class="ob-relay-select">
+            <option>Cerradura</option>
+            <option>Zona energía</option>
+            <option>Luz</option>
+            <option>Ventilador</option>
+            <option selected>Sin usar</option>
+          </select>
+        </div>
+        <div class="ob-relay-row">
+          <div class="ob-relay-num">R4</div>
+          <div class="ob-relay-label">Canal 4</div>
+          <select class="ob-relay-select">
+            <option>Cerradura</option>
+            <option>Zona energía</option>
+            <option>Luz</option>
+            <option>Ventilador</option>
+            <option selected>Sin usar</option>
+          </select>
+        </div>
+      </div>
+      <div class="ob-note">
+        <span class="ob-note-ico">ℹ️</span>
+        Podés cambiar esta configuración más adelante desde Ajustes → Módulo.
+      </div>
+    </div>
+
+    <!-- 5: Verificando -->
+    <div class="ob-step" id="ob-step-5">
+      <div class="ob-checking">
+        <div class="ob-spinner-wrap">
+          <div class="ob-check-circle" id="obCheckCircle">✓</div>
+          <div class="ob-spinner" id="obSpinner"></div>
+        </div>
+        <div>
+          <div class="ob-checking-title" id="obCheckTitle">Conectando módulo...</div>
+          <div class="ob-checking-sub" id="obCheckSub">Esto puede tardar unos segundos</div>
+        </div>
+        <div class="ob-wifi-pill" id="obWifiPill" style="opacity:0;transition:opacity .4s">
+          <div class="ob-wifi-pill-dot"></div>
+          <span id="obWifiPillText">WiFi · -68 dBm</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6: ¡Listo! -->
+    <div class="ob-step" id="ob-step-6">
+      <div style="padding-top:32px">
+        <div class="ob-success-icon">🎉</div>
+        <div class="ob-title" style="text-align:center">¡Todo listo!</div>
+        <div class="ob-subtitle">Tu propiedad está activa y el módulo está en línea.</div>
+        <div class="ob-prop-chip">
+          <span>🏢</span>
+          <span id="obPropChipName">Mi propiedad</span>
+        </div>
+        <div class="ob-summary">
+          <div class="ob-summary-row">
+            <div class="row-ico green">🔒</div>
+            <div class="row-text">
+              <div class="row-main">Cerradura configurada</div>
+              <div class="row-hint">Canal 1 — auto-bloqueo 30s</div>
+            </div>
+            <span style="color:var(--green);font-size:16px">✓</span>
+          </div>
+          <div class="ob-summary-row">
+            <div class="row-ico orange">⚡</div>
+            <div class="row-text">
+              <div class="row-main">Control de energía</div>
+              <div class="row-hint">Canal 2 — zona principal</div>
+            </div>
+            <span style="color:var(--green);font-size:16px">✓</span>
+          </div>
+          <div class="ob-summary-row">
+            <div class="row-ico red">🔔</div>
+            <div class="row-text">
+              <div class="row-main">Alertas activadas</div>
+              <div class="row-hint">Humo, agua, puerta, módulo</div>
+            </div>
+            <span style="color:var(--green);font-size:16px">✓</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- ob-steps -->
+
+  <!-- Footer button -->
+  <div class="ob-footer">
+    <button class="btn-cta" id="obNextBtn" onclick="obNext()">Empezar</button>
+  </div>
+
+</div><!-- screen-onboarding -->
 
 <script>
 /* ── Navigation ──────────────────────────────────────── */
@@ -1068,6 +1590,153 @@ function toggleAlert() {
 function dismissAlert() {
   alertOn = false;
   document.getElementById('alertStrip').classList.add('hidden');
+}
+
+/* ══ ONBOARDING ══════════════════════════════════════════ */
+const OB_TOTAL   = 7; // steps 0..6
+const OB_LABELS  = ['Empezar','Continuar','Ya estoy conectado','Configurar','Guardar','','Ir al panel'];
+let obStep = 0;
+let obCheckTimer = null;
+
+function buildDots() {
+  const wrap = document.getElementById('obDots');
+  wrap.innerHTML = '';
+  for (let i = 0; i < OB_TOTAL; i++) {
+    const d = document.createElement('div');
+    d.className = 'ob-dot' + (i === obStep ? ' active' : '');
+    wrap.appendChild(d);
+  }
+}
+
+function obUpdateUI() {
+  buildDots();
+
+  document.getElementById('obBack').classList.toggle('hidden', obStep === 0);
+  document.getElementById('obSkip').classList.toggle('hidden', obStep === 0 || obStep === 6);
+
+  const btn = document.getElementById('obNextBtn');
+  btn.textContent = OB_LABELS[obStep];
+  btn.style.display = obStep === 5 ? 'none' : '';
+}
+
+function obShowStep(idx, direction) {
+  const current = document.getElementById('ob-step-' + obStep);
+  const next    = document.getElementById('ob-step-' + idx);
+
+  current.classList.remove('active');
+  current.classList.add(direction > 0 ? 'exit-left' : '');
+  setTimeout(() => current.classList.remove('exit-left'), 300);
+
+  next.classList.remove('enter-right');
+  if (direction > 0) {
+    next.classList.add('enter-right');
+    requestAnimationFrame(() => requestAnimationFrame(() => next.classList.remove('enter-right')));
+  }
+  next.classList.add('active');
+  obStep = idx;
+  obUpdateUI();
+}
+
+function obNext() {
+  if (obStep === 5) return; // auto-advances
+
+  if (obStep === 6) {
+    // Finish: update property chip and go to main app
+    const name = document.getElementById('obPropName').value.trim() || 'Mi propiedad';
+    document.getElementById('obPropChipName').textContent = name;
+    obClose();
+    return;
+  }
+
+  if (obStep === 4) {
+    // Start connection check
+    obShowStep(5, 1);
+    startConnectionCheck();
+    return;
+  }
+
+  obShowStep(obStep + 1, 1);
+
+  // When entering step 5, start check
+  if (obStep === 5) startConnectionCheck();
+}
+
+function obPrev() {
+  if (obStep === 0) return;
+  if (obStep === 5 && obCheckTimer) {
+    clearTimeout(obCheckTimer);
+    obCheckTimer = null;
+  }
+  obShowStep(obStep - 1, -1);
+}
+
+function startOnboarding() {
+  // Reset to step 0
+  document.querySelectorAll('.ob-step').forEach(s => s.classList.remove('active','exit-left','enter-right'));
+  document.getElementById('ob-step-0').classList.add('active');
+  obStep = 0;
+  obUpdateUI();
+
+  // Reset check state
+  resetCheckState();
+
+  const s = document.getElementById('screen-onboarding');
+  // Hide other screens
+  document.getElementById('screen-login').classList.remove('active');
+  document.getElementById('screen-main').classList.remove('active');
+  s.classList.add('active');
+  s.classList.remove('slide-up');
+  void s.offsetWidth;
+  s.classList.add('slide-up');
+}
+
+function obClose() {
+  document.getElementById('screen-onboarding').classList.remove('active');
+  document.getElementById('screen-main').classList.add('active');
+}
+
+/* ── Connection check simulation ────────────────────── */
+function resetCheckState() {
+  const circle = document.getElementById('obCheckCircle');
+  const spinner = document.getElementById('obSpinner');
+  const pill    = document.getElementById('obWifiPill');
+  circle.classList.remove('show');
+  spinner.style.display = '';
+  pill.style.opacity = '0';
+  document.getElementById('obCheckTitle').textContent = 'Conectando módulo...';
+  document.getElementById('obCheckSub').textContent   = 'Esto puede tardar unos segundos';
+}
+
+function startConnectionCheck() {
+  resetCheckState();
+  const btn = document.getElementById('obNextBtn');
+  btn.style.display = 'none';
+
+  obCheckTimer = setTimeout(() => {
+    const circle  = document.getElementById('obCheckCircle');
+    const spinner = document.getElementById('obSpinner');
+    const pill    = document.getElementById('obWifiPill');
+
+    circle.classList.add('show');
+    spinner.style.display = 'none';
+
+    const ssid = document.getElementById('obSsid').value.trim() || 'Mi red WiFi';
+    document.getElementById('obCheckTitle').textContent = 'Módulo conectado';
+    document.getElementById('obCheckSub').textContent   = ssid + ' · -68 dBm';
+    document.getElementById('obWifiPillText').textContent = ssid + ' · -68 dBm';
+    pill.style.opacity = '1';
+
+    setTimeout(() => {
+      obShowStep(6, 1);
+      document.getElementById('obNextBtn').style.display = '';
+    }, 1200);
+  }, 2200);
+}
+
+/* ── Property type selector ─────────────────────────── */
+function selectType(btn) {
+  document.querySelectorAll('.ob-type-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
 }
 </script>
 </body>
