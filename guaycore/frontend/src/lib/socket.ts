@@ -6,9 +6,7 @@ const WS_URL = process.env.NEXT_PUBLIC_WS_URL || 'http://localhost:3000';
 let socket: Socket | null = null;
 
 export function getSocket(): Socket {
-  if (socket && socket.connected) {
-    return socket;
-  }
+  if (socket && socket.connected) return socket;
 
   const token = useAuthStore.getState().token;
 
@@ -17,13 +15,10 @@ export function getSocket(): Socket {
     socket = null;
   }
 
-  socket = io(WS_URL, {
-    path: '/socket.io',
-    namespace: '/ws',
+  // Namespace /ws va en la URL — no como opción separada
+  socket = io(`${WS_URL}/ws`, {
     transports: ['websocket', 'polling'],
-    auth: {
-      token: token || '',
-    },
+    auth: { token: token || '' },
     reconnection: true,
     reconnectionAttempts: 10,
     reconnectionDelay: 1000,
@@ -31,59 +26,37 @@ export function getSocket(): Socket {
     timeout: 20000,
   });
 
-  socket.on('connect', () => {
-    console.log('[Socket] Connected:', socket?.id);
-  });
-
-  socket.on('disconnect', (reason) => {
-    console.log('[Socket] Disconnected:', reason);
-  });
-
-  socket.on('connect_error', (err) => {
-    console.error('[Socket] Connection error:', err.message);
-  });
-
-  socket.on('reconnect', (attempt) => {
-    console.log('[Socket] Reconnected after', attempt, 'attempts');
-  });
+  socket.on('connect',       () => console.log('[Socket] Connected:', socket?.id));
+  socket.on('disconnect',    (r) => console.log('[Socket] Disconnected:', r));
+  socket.on('connect_error', (e) => console.error('[Socket] Error:', e.message));
 
   return socket;
 }
 
 export function disconnectSocket() {
-  if (socket) {
-    socket.disconnect();
-    socket = null;
-  }
+  socket?.disconnect();
+  socket = null;
 }
 
+// deviceId subscription — event names must match TelemetryGateway
 export function subscribeToDevice(
   deviceId: string,
-  onTelemetry: (data: Record<string, unknown>) => void
+  onTelemetry: (data: Record<string, unknown>) => void,
 ): () => void {
   const s = getSocket();
-
-  s.emit('subscribe:device', { deviceId });
-
-  const eventName = `telemetry:${deviceId}`;
-  s.on(eventName, onTelemetry);
-
+  s.emit('subscribe', { deviceId });
+  s.on('telemetry', onTelemetry);
   return () => {
-    s.emit('unsubscribe:device', { deviceId });
-    s.off(eventName, onTelemetry);
+    s.emit('unsubscribe', { deviceId });
+    s.off('telemetry', onTelemetry);
   };
 }
 
 export function subscribeToAlerts(
-  onAlert: (alert: Record<string, unknown>) => void
+  onAlert: (alert: Record<string, unknown>) => void,
 ): () => void {
   const s = getSocket();
-
-  s.emit('subscribe:alerts');
   s.on('alert:new', onAlert);
-
-  return () => {
-    s.emit('unsubscribe:alerts');
-    s.off('alert:new', onAlert);
-  };
+  return () => s.off('alert:new', onAlert);
 }
+
