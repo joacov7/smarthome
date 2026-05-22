@@ -1,4 +1,6 @@
 #pragma once
+// El form tiene ~52 campos (relés + entradas); el default es 32 → se pierden args
+#define WEBSERVER_MAX_POST_ARGS 64
 #include <WiFi.h>
 #include <DNSServer.h>
 #include <WebServer.h>
@@ -272,7 +274,7 @@ document.getElementById('cfgForm').addEventListener('submit',function(e){
   e.preventDefault();
   const btn = this.querySelector('.save-btn');
   btn.disabled=true; btn.textContent='Guardando...';
-  fetch('/save',{method:'POST',body:new FormData(this)})
+  fetch('/save',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams(new FormData(this))})
     .then(r=>r.text())
     .then(t=>{
       showAlert(t.includes('OK')?'Configuración guardada. Reiniciando...':'Error al guardar.',!t.includes('OK'));
