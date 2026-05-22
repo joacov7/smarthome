@@ -8,7 +8,8 @@ import * as bcrypt from 'bcryptjs';
 import { ConfigService } from '@nestjs/config';
 import { User } from '../users/entities/user.entity';
 import { Organization } from '../organizations/entities/organization.entity';
-import { JwtPayload, UserRole } from '../../shared/types';
+import { JwtPayload, UserRole, RequestContext } from '../../shared/types';
+import { RegisterDto, LoginDto } from './dto/auth.dto';
 
 export interface TokenPair {
   accessToken:  string;
@@ -28,34 +29,24 @@ export class AuthService {
   ) {}
 
   // ── Registro de nueva organización + owner ─────────────────
-  async register(dto: {
-    orgName:   string;
-    email:     string;
-    password:  string;
-    firstName: string;
-    lastName?: string;
-  }): Promise<TokenPair> {
-    // Verificar email único dentro del sistema
-    const exists = await this.usersRepo.findOne({
-      where: { email: dto.email },
-    });
+  async register(dto: RegisterDto): Promise<TokenPair> {
+    const exists = await this.usersRepo.findOne({ where: { email: dto.email } });
     if (exists) throw new ConflictException('Email ya registrado');
 
-    // Crear organización
-    const slug = dto.orgName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
-    const org  = await this.orgsRepo.save(
-      this.orgsRepo.create({ name: dto.orgName, slug: `${slug}-${Date.now()}` })
+    const existingOrg = await this.orgsRepo.findOne({ where: { slug: dto.orgSlug } });
+    if (existingOrg) throw new ConflictException('Slug de organización ya en uso');
+
+    const org = await this.orgsRepo.save(
+      this.orgsRepo.create({ name: dto.orgName, slug: dto.orgSlug })
     );
 
-    // Crear usuario owner
     const passwordHash = await bcrypt.hash(dto.password, 12);
     const user = await this.usersRepo.save(
       this.usersRepo.create({
         tenantId:     org.id,
         organization: org,
         email:        dto.email,
-        firstName:    dto.firstName,
-        lastName:     dto.lastName,
+        firstName:    dto.email.split('@')[0],
         passwordHash,
         role:         UserRole.ORG_OWNER,
       })
@@ -66,42 +57,33 @@ export class AuthService {
   }
 
   // ── Login ─────────────────────────────────────────────────
-  async login(email: string, password: string, ip?: string): Promise<TokenPair> {
-    const user = await this.usersRepo.findOne({ where: { email, isActive: true } });
+  async login(dto: LoginDto, ip?: string): Promise<TokenPair> {
+    let user: User | null;
+
+    if (dto.orgSlug) {
+      const org = await this.orgsRepo.findOne({ where: { slug: dto.orgSlug } });
+      if (!org) throw new UnauthorizedException('Organización no encontrada');
+      user = await this.usersRepo.findOne({ where: { email: dto.email, tenantId: org.id, isActive: true } });
+    } else {
+      user = await this.usersRepo.findOne({ where: { email: dto.email, isActive: true } });
+    }
+
     if (!user) throw new UnauthorizedException('Credenciales incorrectas');
 
-    const valid = await bcrypt.compare(password, user.passwordHash);
+    const valid = await bcrypt.compare(dto.password, user.passwordHash);
     if (!valid) throw new UnauthorizedException('Credenciales incorrectas');
 
-    // Audit
-    await this.usersRepo.update(user.id, {
-      lastLoginAt: new Date(),
-      lastLoginIp: ip,
-    });
+    await this.usersRepo.update(user.id, { lastLoginAt: new Date(), lastLoginIp: ip });
 
     return this.issueTokens(user);
   }
 
   // ── Refresh ────────────────────────────────────────────────
-  async refresh(refreshToken: string): Promise<TokenPair> {
-    let payload: JwtPayload;
-    try {
-      payload = this.jwtService.verify(refreshToken, {
-        secret: this.config.get('JWT_REFRESH_SECRET'),
-      });
-    } catch {
-      throw new UnauthorizedException('Refresh token inválido o expirado');
-    }
-
-    if (payload.type !== 'refresh') {
-      throw new UnauthorizedException('Token type incorrecto');
-    }
-
+  async refresh(ctx: RequestContext, _refreshToken: string): Promise<TokenPair> {
     const user = await this.usersRepo.findOne({
-      where: { id: payload.sub, isActive: true },
+      where: { id: ctx.userId, isActive: true },
     });
     if (!user) throw new UnauthorizedException('Usuario no encontrado');
-
     return this.issueTokens(user);
   }
 
@@ -124,8 +106,8 @@ export class AuthService {
     const accessToken = this.jwtService.sign(
       { ...base, type: 'access' },
       {
-        secret:    this.config.get('JWT_SECRET'),
-        expiresIn: this.config.get('JWT_EXPIRES_IN', '15m'),
+        secret:    this.config.get('JWT_ACCESS_SECRET'),
+        expiresIn: this.config.get('JWT_ACCESS_EXPIRES_IN', '15m'),
       }
     );
 

@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 import { APP_GUARD, APP_FILTER } from '@nestjs/core';
 
 // ── Core modules ──────────────────────────────────────────────
@@ -14,6 +15,7 @@ import { RulesModule }         from './core/rules/rules.module';
 import { AlertsModule }        from './core/alerts/alerts.module';
 import { OtaModule }           from './core/ota/ota.module';
 import { MqttModule }          from './core/mqtt/mqtt.module';
+import { GatewayModule }       from './core/gateway/gateway.module';
 
 // ── Vertical modules ─────────────────────────────────────────
 import { GuayHomeModule }     from './verticals/guayhome/guayhome.module';
@@ -32,6 +34,7 @@ import { Telemetry }       from './core/telemetry/entities/telemetry.entity';
 import { DeviceEvent }     from './core/events/entities/event.entity';
 import { Rule }            from './core/rules/entities/rule.entity';
 import { FirmwareVersion, OtaCampaign } from './core/ota/entities/firmware.entity';
+import { Alert } from './core/alerts/entities/alert.entity';
 
 @Module({
   imports: [
@@ -41,6 +44,9 @@ import { FirmwareVersion, OtaCampaign } from './core/ota/entities/firmware.entit
       envFilePath: ['.env.local', '.env'],
     }),
 
+    // ── Global event emitter (internal pub/sub) ───────────
+    EventEmitterModule.forRoot({ wildcard: false }),
+
     // ── TypeORM + PostgreSQL ──────────────────────────────
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
@@ -49,7 +55,7 @@ import { FirmwareVersion, OtaCampaign } from './core/ota/entities/firmware.entit
         url:          cfg.get<string>('DATABASE_URL'),
         entities:    [
           Organization, User, Device, Telemetry,
-          DeviceEvent, Rule, FirmwareVersion, OtaCampaign,
+          DeviceEvent, Rule, Alert, FirmwareVersion, OtaCampaign,
         ],
         synchronize: false,   // NUNCA true en producción — usar migraciones SQL
         logging:     cfg.get('NODE_ENV') === 'development' ? ['error','warn'] : false,
@@ -70,6 +76,9 @@ import { FirmwareVersion, OtaCampaign } from './core/ota/entities/firmware.entit
     RulesModule,
     AlertsModule,
     OtaModule,
+
+    // ── WebSocket gateway ─────────────────────────────────
+    GatewayModule,
 
     // ── Verticales ─────────────────────────────────────────
     GuayHomeModule,
