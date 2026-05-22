@@ -43,6 +43,10 @@ struct InputConfig {
     bool inverted;      // true = NC (normal cerrado)
 };
 
+// Modo de conexión MQTT
+#define MODE_HA        0   // Home Assistant (Mosquitto) — comportamiento original
+#define MODE_GUAYCORE  1   // GuayCore IoT platform (EMQX)
+
 struct Config {
     // ── Red ────────────────────────────────────────────────
     char wifiSSID[33];
@@ -70,6 +74,13 @@ struct Config {
     // ── HomeKit / HA ───────────────────────────────────────
     char area[24];      // habitación → agrupa dispositivos en la app Casa
 
+    // ── GuayCore ───────────────────────────────────────────
+    // Campos usados solo en MODE_GUAYCORE
+    char gcTenantId[37];      // UUID del tenant (ej: "550e8400-e29b-41d4-a716-...")
+    char gcDeviceKey[65];     // MQTT username generado por DevicesService.create()
+    char gcDeviceSecret[65];  // MQTT password (plain) — solo se muestra UNA vez
+    uint8_t mqttMode;         // MODE_HA (0) o MODE_GUAYCORE (1)
+
     // ── Flags ──────────────────────────────────────────────
     bool configured;    // false = mostrar portal en próximo arranque
 };
@@ -91,6 +102,10 @@ void configDefaults() {
     strlcpy(cfg.deviceName, "Módulo 01",     sizeof(cfg.deviceName));
     strlcpy(cfg.otaPass,    "esp32ota",      sizeof(cfg.otaPass));
     strlcpy(cfg.area,       "General",       sizeof(cfg.area));
+    strlcpy(cfg.gcTenantId,    "",  sizeof(cfg.gcTenantId));
+    strlcpy(cfg.gcDeviceKey,   "",  sizeof(cfg.gcDeviceKey));
+    strlcpy(cfg.gcDeviceSecret,"",  sizeof(cfg.gcDeviceSecret));
+    cfg.mqttMode = MODE_HA;
     cfg.relayCount = 4;
     cfg.inputCount = 8;
 
@@ -133,6 +148,10 @@ void configLoad() {
     p.getBytes("devnm",  &cfg.deviceName, sizeof(cfg.deviceName));
     p.getBytes("otapw",  &cfg.otaPass,    sizeof(cfg.otaPass));
     p.getBytes("area",   &cfg.area,       sizeof(cfg.area));
+    p.getBytes("gctid",  &cfg.gcTenantId,    sizeof(cfg.gcTenantId));
+    p.getBytes("gckey",  &cfg.gcDeviceKey,   sizeof(cfg.gcDeviceKey));
+    p.getBytes("gcsec",  &cfg.gcDeviceSecret,sizeof(cfg.gcDeviceSecret));
+    cfg.mqttMode = p.getUChar("mqttmode", MODE_HA);
     cfg.relayCount = p.getUChar("rcnt",   4);
     cfg.inputCount = p.getUChar("icnt",   8);
     p.getBytes("relays2", cfg.relay,      sizeof(cfg.relay));  // v2: incluye haType
@@ -157,6 +176,10 @@ void configSave() {
     p.putBytes("devnm",  &cfg.deviceName, sizeof(cfg.deviceName));
     p.putBytes("otapw",  &cfg.otaPass,    sizeof(cfg.otaPass));
     p.putBytes("area",   &cfg.area,       sizeof(cfg.area));
+    p.putBytes("gctid",  &cfg.gcTenantId,    sizeof(cfg.gcTenantId));
+    p.putBytes("gckey",  &cfg.gcDeviceKey,   sizeof(cfg.gcDeviceKey));
+    p.putBytes("gcsec",  &cfg.gcDeviceSecret,sizeof(cfg.gcDeviceSecret));
+    p.putUChar("mqttmode", cfg.mqttMode);
     p.putUChar("rcnt",   cfg.relayCount);
     p.putUChar("icnt",   cfg.inputCount);
     p.putBytes("relays2", cfg.relay,      sizeof(cfg.relay));  // v2: incluye haType

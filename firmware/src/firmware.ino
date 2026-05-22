@@ -28,9 +28,11 @@
 #include <Wire.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
-#include "config.h"   // pines I2C, direcciones I2C, RELAY_ACTIVE_LOW
-#include "storage.h"  // struct Config + NVS helpers
-#include "portal.h"   // captive portal AP + config web UI
+#include <ArduinoJson.h>
+#include "config.h"     // pines I2C, direcciones I2C, RELAY_ACTIVE_LOW
+#include "storage.h"    // struct Config + NVS helpers
+#include "portal.h"     // captive portal AP + config web UI
+#include "guaycore.h"   // integración GuayCore IoT platform
 
 // ── Modo de operación ─────────────────────────────────────
 static bool portalMode = false;
@@ -240,6 +242,12 @@ void publishDiscovery() {
 // ==========================================================
 
 void mqttCallback(char* topic, byte* payload, unsigned int len) {
+    // GuayCore mode: delegar al handler específico
+    if (cfg.mqttMode == MODE_GUAYCORE) {
+        guaycoreMqttCallback(mqtt, topic, payload, len);
+        return;
+    }
+
     char msg[16] = {0};
     memcpy(msg, payload, min(len, (unsigned int)15));
 
@@ -290,6 +298,11 @@ void mqttCallback(char* topic, byte* payload, unsigned int len) {
 // ==========================================================
 
 bool mqttConnect() {
+    if (cfg.mqttMode == MODE_GUAYCORE) {
+        return guaycoreConnect(mqtt);
+    }
+
+    // Modo HA
     if (mqtt.connect(cfg.deviceId, cfg.mqttUser, cfg.mqttPass,
                      tStatus, 1, true, "offline")) {
         char sub[96];
@@ -463,10 +476,14 @@ void setup() {
     }
 
     // ── Modo normal ───────────────────────────────────────
-    snprintf(tRelaySet,   sizeof(tRelaySet),   "esp32modular/%s/relay", cfg.deviceId);
-    snprintf(tRelayState, sizeof(tRelayState),  "esp32modular/%s/relay", cfg.deviceId);
-    snprintf(tInputState, sizeof(tInputState),  "esp32modular/%s/input", cfg.deviceId);
-    snprintf(tStatus,     sizeof(tStatus),      "esp32modular/%s/status", cfg.deviceId);
+    if (cfg.mqttMode == MODE_GUAYCORE) {
+        guaycoreSetupTopics();
+    } else {
+        snprintf(tRelaySet,   sizeof(tRelaySet),   "esp32modular/%s/relay", cfg.deviceId);
+        snprintf(tRelayState, sizeof(tRelayState),  "esp32modular/%s/relay", cfg.deviceId);
+        snprintf(tInputState, sizeof(tInputState),  "esp32modular/%s/input", cfg.deviceId);
+        snprintf(tStatus,     sizeof(tStatus),      "esp32modular/%s/status", cfg.deviceId);
+    }
 
     WiFi.mode(WIFI_STA);
     WiFi.setAutoReconnect(true);
@@ -563,9 +580,21 @@ void loop() {
         updateOled();
     }
 
-    // Heartbeat MQTT cada 60s
+    // Heartbeat / telemetría periódica
     if (now - tHeartbeat >= 60000) {
         tHeartbeat = now;
-        if (mqtt.connected()) mqtt.publish(tStatus, "online", true);
+        if (mqtt.connected()) {
+            if (cfg.mqttMode == MODE_GUAYCORE) {
+                // guaycoreTick maneja el intervalo — aquí solo heartbeat de status
+                mqtt.publish(gTopicStatus, "online", true);
+            } else {
+                mqtt.publish(tStatus, "online", true);
+            }
+        }
+    }
+
+    // GuayCore: telemetría periódica configurable
+    if (cfg.mqttMode == MODE_GUAYCORE) {
+        guaycoreTick(mqtt);
     }
 }
