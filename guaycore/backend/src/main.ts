@@ -45,12 +45,17 @@ async function bootstrap() {
       .setDescription('Plataforma IoT modular — GuayCore')
       .setVersion('0.1.0')
       .addBearerAuth()
-      .addTag('auth',          'Autenticación y tokens')
-      .addTag('organizations', 'Gestión de organizaciones')
-      .addTag('devices',       'Registro y control de dispositivos')
-      .addTag('telemetry',     'Consulta de telemetría')
-      .addTag('rules',         'Motor de reglas')
-      .addTag('ota',           'Actualizaciones de firmware')
+      .addTag('auth',              'Autenticación y tokens')
+      .addTag('organizations',     'Gestión de organizaciones')
+      .addTag('users',             'Gestión de usuarios del tenant')
+      .addTag('devices',           'Registro y control de dispositivos')
+      .addTag('telemetry',         'Consulta de telemetría')
+      .addTag('events',            'Eventos de dispositivos')
+      .addTag('alerts',            'Alertas y notificaciones')
+      .addTag('rules',             'Motor de reglas')
+      .addTag('ota',               'Actualizaciones de firmware OTA')
+      .addTag('vertical/guayhome', 'Automatización del hogar')
+      .addTag('vertical/logiguay', 'Rastreo de flota')
       .build();
 
     const document = SwaggerModule.createDocument(app, swaggerConfig);
