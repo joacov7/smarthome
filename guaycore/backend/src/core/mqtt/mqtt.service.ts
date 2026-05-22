@@ -88,7 +88,7 @@ export class MqttService implements OnModuleInit, OnModuleDestroy {
     this.handlers.set(type, handler);
   }
 
-  // ── Publicación hacia dispositivos ─────────────────────────
+  // ── Publicación hacia un dispositivo específico ───────────
   publish(tenantId: string, deviceId: string, type: 'commands' | 'config' | 'ota', payload: object) {
     const topic = `guay/${tenantId}/device/${deviceId}/${type}`;
     const msg   = JSON.stringify(payload);
@@ -96,8 +96,14 @@ export class MqttService implements OnModuleInit, OnModuleDestroy {
     this.logger.debug(`→ ${topic}`);
   }
 
-  // ── Endpoint interno: EMQX llama esto para autenticar dispositivos ──
-  // Lógica real en MqttAuthController
+  // ── Broadcast a todos los dispositivos del tenant ─────────
+  publishBroadcast(tenantId: string, type: string, payload: object) {
+    // Devices are expected to filter by targetFilter on the client side
+    const topic = `guay/${tenantId}/broadcast/${type}`;
+    this.client.publish(topic, JSON.stringify(payload), { qos: 1 });
+    this.logger.debug(`→ broadcast ${topic}`);
+  }
+
   isConnected(): boolean {
     return this.client?.connected ?? false;
   }

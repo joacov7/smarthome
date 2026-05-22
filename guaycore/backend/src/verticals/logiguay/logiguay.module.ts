@@ -1,8 +1,11 @@
 import { Module } from '@nestjs/common';
+import { LogiguayController } from './logiguay.controller';
 
-// Vertical: logiguay
-// Reutiliza DevicesModule, TelemetryModule, RulesModule del core.
-// Define entidades, DTOs y lógica específica de esta vertical.
-
-@Module({})
+/**
+ * Logiguay vertical — fleet tracking & logistics
+ * Extends core with geofences, driver management, route history.
+ */
+@Module({
+  controllers: [LogiguayController],
+})
 export class LogiguayModule {}
