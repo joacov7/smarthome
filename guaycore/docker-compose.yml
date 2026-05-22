@@ -1,0 +1,137 @@
+version: '3.9'
+
+# ============================================================
+#  GuayCore — Stack completo de desarrollo
+#  Servicios: Postgres+Timescale, Redis, EMQX, Backend, Frontend
+# ============================================================
+
+services:
+
+  # ── PostgreSQL + TimescaleDB ──────────────────────────────
+  postgres:
+    image: timescale/timescaledb:latest-pg15
+    container_name: guaycore-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB:       ${POSTGRES_DB:-guaycore}
+      POSTGRES_USER:     ${POSTGRES_USER:-guay}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-guay_dev_pass}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./infra/postgres/migrations:/docker-entrypoint-initdb.d:ro
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-guay} -d ${POSTGRES_DB:-guaycore}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Redis ─────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: guaycore-redis
+    restart: unless-stopped
+    command: redis-server --requirepass ${REDIS_PASSWORD:-redis_dev_pass} --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-redis_dev_pass}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── EMQX MQTT Broker ──────────────────────────────────────
+  emqx:
+    image: emqx/emqx:5.5.0
+    container_name: guaycore-emqx
+    restart: unless-stopped
+    environment:
+      EMQX_NAME:                    guaycore
+      EMQX_DASHBOARD__DEFAULT_PASSWORD: ${EMQX_DASHBOARD_PASS:-guay_emqx_admin}
+      # Auth via HTTP hook → valida contra el backend
+      EMQX_AUTHENTICATION__1__MECHANISM:   password_based
+      EMQX_AUTHENTICATION__1__BACKEND:     http
+      EMQX_AUTHENTICATION__1__URL:         http://backend:3000/internal/mqtt/auth
+      EMQX_AUTHENTICATION__1__METHOD:      post
+      EMQX_AUTHENTICATION__1__HEADERS__content-type: application/json
+      EMQX_AUTHENTICATION__1__BODY:        '{"username":"${username}","password":"${password}","clientid":"${clientid}"}'
+    volumes:
+      - emqx_data:/opt/emqx/data
+      - emqx_log:/opt/emqx/log
+    ports:
+      - "1883:1883"    # MQTT
+      - "8883:8883"    # MQTT/TLS
+      - "8083:8083"    # MQTT/WebSocket
+      - "8084:8084"    # MQTT/WebSocket TLS
+      - "18083:18083"  # Dashboard
+    healthcheck:
+      test: ["CMD", "/opt/emqx/bin/emqx", "ctl", "status"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # ── Backend NestJS ────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: development
+    container_name: guaycore-backend
+    restart: unless-stopped
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      DATABASE_URL: postgresql://${POSTGRES_USER:-guay}:${POSTGRES_PASSWORD:-guay_dev_pass}@postgres:5432/${POSTGRES_DB:-guaycore}
+      REDIS_URL: redis://:${REDIS_PASSWORD:-redis_dev_pass}@redis:6379
+      MQTT_URL: mqtt://emqx:1883
+      MQTT_USERNAME: ${MQTT_BACKEND_USER:-guaycore_backend}
+      MQTT_PASSWORD: ${MQTT_BACKEND_PASS:-backend_secret}
+      JWT_SECRET: ${JWT_SECRET:-change_this_in_production_32chars}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-change_this_refresh_secret_32chars}
+      JWT_EXPIRES_IN: 15m
+      JWT_REFRESH_EXPIRES_IN: 7d
+    volumes:
+      - ./backend/src:/app/src
+      - ./backend/package.json:/app/package.json
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      emqx:
+        condition: service_healthy
+
+  # ── Adminer (DB UI dev) ───────────────────────────────────
+  adminer:
+    image: adminer:latest
+    container_name: guaycore-adminer
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+
+  # ── RedisInsight (Redis UI dev) ───────────────────────────
+  redis-insight:
+    image: redis/redisinsight:latest
+    container_name: guaycore-redisinsight
+    restart: unless-stopped
+    ports:
+      - "5540:5540"
+    depends_on:
+      - redis
+
+volumes:
+  postgres_data:
+  redis_data:
+  emqx_data:
+  emqx_log:
+
+networks:
+  default:
+    name: guaycore-network
