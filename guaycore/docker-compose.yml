@@ -89,9 +89,9 @@ services:
       MQTT_URL: mqtt://emqx:1883
       MQTT_USERNAME: ${MQTT_BACKEND_USER:-guaycore_backend}
       MQTT_PASSWORD: ${MQTT_BACKEND_PASS:-backend_secret}
-      JWT_SECRET: ${JWT_SECRET:-change_this_in_production_32chars}
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-change_this_in_production_32chars}
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-change_this_refresh_secret_32chars}
-      JWT_EXPIRES_IN: 15m
+      JWT_ACCESS_EXPIRES_IN: 15m
       JWT_REFRESH_EXPIRES_IN: 7d
     volumes:
       - ./backend/src:/app/src

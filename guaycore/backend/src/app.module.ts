@@ -41,7 +41,7 @@ import { Alert } from './core/alerts/entities/alert.entity';
     // ── Config global ──────────────────────────────────────
     ConfigModule.forRoot({
       isGlobal:   true,
-      envFilePath: ['.env.local', '.env'],
+      envFilePath: ['.env.local', '.env', '../.env'],
     }),
 
     // ── Global event emitter (internal pub/sub) ───────────
