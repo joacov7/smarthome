@@ -1,5 +1,3 @@
-version: '3.9'
-
 # ============================================================
 #  GuayCore — Stack completo de desarrollo
 #  Servicios: Postgres+Timescale, Redis, EMQX, Backend, Frontend
@@ -57,7 +55,7 @@ services:
       EMQX_AUTHENTICATION__1__URL:         http://host.docker.internal:3000/internal/mqtt/auth
       EMQX_AUTHENTICATION__1__METHOD:      post
       EMQX_AUTHENTICATION__1__HEADERS__content-type: application/json
-      EMQX_AUTHENTICATION__1__BODY:        '{"username":"${username}","password":"${password}","clientid":"${clientid}"}'
+      EMQX_AUTHENTICATION__1__BODY:        '{"username":"$${username}","password":"$${password}","clientid":"$${clientid}"}'
     volumes:
       - emqx_data:/opt/emqx/data
       - emqx_log:/opt/emqx/log
