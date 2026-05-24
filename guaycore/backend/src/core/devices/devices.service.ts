@@ -73,7 +73,7 @@ export class DevicesService {
   // ── Config remota — publica via MQTT ──────────────────────
   async pushConfig(tenantId: string, deviceId: string, config: Record<string, unknown>): Promise<void> {
     const device = await this.findOne(tenantId, deviceId);
-    await this.devicesRepo.update(deviceId, { remoteConfig: config });
+    await this.devicesRepo.update(deviceId, { remoteConfig: config } as any);
     this.mqttService.publish(tenantId, device.deviceKey, 'config', config);
   }
 

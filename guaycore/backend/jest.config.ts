@@ -4,14 +4,12 @@ const config: Config = {
   moduleFileExtensions: ['js', 'json', 'ts'],
   rootDir: 'src',
   testRegex: '.*\\.spec\\.ts$',
-  transform: { '^.+\\.(t|j)s$': 'ts-jest' },
+  transform: {
+    '^.+\\.(t|j)s$': ['ts-jest', { tsconfig: '<rootDir>/../tsconfig.spec.json' }],
+  },
   collectCoverageFrom: ['**/*.(t|j)s'],
   coverageDirectory: '../coverage',
   testEnvironment: 'node',
-  moduleNameMapper: {
-    '^../../shared/(.*)$': '<rootDir>/shared/$1',
-    '^../(.*)$':           '<rootDir>/core/$1',
-  },
 };
 
 export default config;

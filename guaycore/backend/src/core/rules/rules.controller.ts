@@ -45,7 +45,7 @@ export class RulesController {
     @Param('id') id: string,
     @Body() body: Partial<Rule>,
   ) {
-    await this.repo.update({ id, tenantId }, body);
+    await this.repo.update({ id, tenantId }, body as any);
     return this.repo.findOneOrFail({ where: { id, tenantId } });
   }
 

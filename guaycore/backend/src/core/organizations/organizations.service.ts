@@ -23,7 +23,7 @@ export class OrganizationsService {
   async updatePlan(id: string, plan: PlanTier, limits: Record<string, unknown>): Promise<Organization> {
     const org = await this.findById(id);
     org.plan = plan;
-    org.planLimits = limits;
+    org.planLimits = limits as Organization['planLimits'];
     return this.repo.save(org);
   }
 
