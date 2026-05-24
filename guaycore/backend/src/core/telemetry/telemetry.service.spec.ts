@@ -66,7 +66,7 @@ describe('TelemetryService', () => {
     it('uses provided ts from payload', async () => {
       const dsQuery = jest.fn().mockResolvedValue([]);
       const { svc } = await buildService({ query: dsQuery });
-      const ts = '2024-06-01T12:00:00Z';
+      const ts = new Date('2024-06-01T12:00:00Z').getTime();
 
       await svc.ingest({
         tenantId: 'tenant-1',
@@ -109,7 +109,7 @@ describe('TelemetryService', () => {
   // ── latest ────────────────────────────────────────────
   describe('latest()', () => {
     it('returns the latest record', async () => {
-      const record = { ts: new Date(), deviceId: 'd', tenantId: 't', data: { temp: 22 } } as Telemetry;
+      const record = { ts: new Date(), deviceId: 'd', tenantId: 't', data: { temp: 22 }, rssi: -70 } as Telemetry;
       const { svc } = await buildService({ findOne: jest.fn().mockResolvedValue(record) });
 
       const result = await svc.latest({ tenantId: 't', deviceId: 'd' });

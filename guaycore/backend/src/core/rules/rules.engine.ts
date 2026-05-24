@@ -99,7 +99,7 @@ export class RulesEngine {
 
   private async executeAction(action: RuleAction, rule: Rule, ctx: RuleEvalContext): Promise<void> {
     // Cada acción inyecta el contexto en los params
-    const enrichedParams = {
+    const enrichedParams: Record<string, unknown> = {
       ...action.params,
       _deviceId: ctx.deviceId,
       _tenantId: ctx.tenantId,
