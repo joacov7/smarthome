@@ -32,8 +32,12 @@ export class MqttAuthController {
   @HttpCode(HttpStatus.OK)
   async authenticate(@Body() body: MqttAuthBody): Promise<{ result: string }> {
     // Cuenta de servicio del propio backend
-    const backendUser = this.config.get('MQTT_USERNAME') ?? this.config.get('MQTT_BACKEND_USER');
-    const backendPass = this.config.get('MQTT_PASSWORD') ?? this.config.get('MQTT_BACKEND_PASS');
+    const backendUser = this.config.get('MQTT_USERNAME')
+                     ?? this.config.get('MQTT_BACKEND_USER')
+                     ?? 'guaycore_backend';
+    const backendPass = this.config.get('MQTT_PASSWORD')
+                     ?? this.config.get('MQTT_BACKEND_PASS')
+                     ?? 'backend_secret';
     if (body.username === backendUser && body.password === backendPass) {
       return { result: 'allow' };
     }

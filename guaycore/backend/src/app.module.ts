@@ -22,9 +22,10 @@ import { GuayHomeModule }     from './verticals/guayhome/guayhome.module';
 import { LogiguayModule }     from './verticals/logiguay/logiguay.module';
 
 // ── Shared ────────────────────────────────────────────────────
-import { JwtAuthGuard }           from './shared/guards/jwt-auth.guard';
-import { RolesGuard }             from './shared/guards/roles.guard';
-import { GlobalExceptionFilter }  from './shared/filters/global-exception.filter';
+import { JwtAuthGuard }              from './shared/guards/jwt-auth.guard';
+import { RolesGuard }                from './shared/guards/roles.guard';
+import { GlobalExceptionFilter }     from './shared/filters/global-exception.filter';
+import { SnakeCaseNamingStrategy }   from './shared/snake-case-naming.strategy';
 
 // ── Entities (todas para TypeORM) ────────────────────────────
 import { Organization }    from './core/organizations/entities/organization.entity';
@@ -57,6 +58,7 @@ import { Alert } from './core/alerts/entities/alert.entity';
           Organization, User, Device, Telemetry,
           DeviceEvent, Rule, Alert, FirmwareVersion, OtaCampaign,
         ],
+        namingStrategy: new SnakeCaseNamingStrategy(),
         synchronize: false,   // NUNCA true en producción — usar migraciones SQL
         logging:     cfg.get('NODE_ENV') === 'development' ? ['error','warn'] : false,
         ssl:         cfg.get('NODE_ENV') === 'production'
