@@ -1,4 +1,5 @@
 import { Controller, Post, Body, HttpCode, HttpStatus } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { Public } from '../../shared/decorators/public.decorator';
 import { DevicesService } from '../devices/devices.service';
 
@@ -21,19 +22,24 @@ interface MqttAuthBody {
 
 @Controller('internal/mqtt')
 export class MqttAuthController {
-  constructor(private readonly devices: DevicesService) {}
+  constructor(
+    private readonly devices: DevicesService,
+    private readonly config: ConfigService,
+  ) {}
 
   @Post('auth')
   @Public()                        // no requiere JWT — viene de EMQX
   @HttpCode(HttpStatus.OK)
   async authenticate(@Body() body: MqttAuthBody): Promise<{ result: string }> {
-    const allowed = await this.devices.authenticateMqtt(body.username, body.password);
-
-    if (!allowed) {
-      // EMQX interpreta cualquier body con result != 'allow' como denegado
-      return { result: 'deny' };
+    // Cuenta de servicio del propio backend
+    const backendUser = this.config.get('MQTT_USERNAME') ?? this.config.get('MQTT_BACKEND_USER');
+    const backendPass = this.config.get('MQTT_PASSWORD') ?? this.config.get('MQTT_BACKEND_PASS');
+    if (body.username === backendUser && body.password === backendPass) {
+      return { result: 'allow' };
     }
 
-    return { result: 'allow' };
+    // Dispositivos IoT — valida contra la DB
+    const allowed = await this.devices.authenticateMqtt(body.username, body.password);
+    return { result: allowed ? 'allow' : 'deny' };
   }
 }
