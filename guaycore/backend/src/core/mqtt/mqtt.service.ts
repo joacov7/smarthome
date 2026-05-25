@@ -29,8 +29,12 @@ export class MqttService implements OnModuleInit, OnModuleDestroy {
 
   async onModuleInit() {
     const url      = this.config.get<string>('MQTT_URL', 'mqtt://localhost:1883');
-    const username = this.config.get<string>('MQTT_USERNAME');
-    const password = this.config.get<string>('MQTT_PASSWORD');
+    const username = this.config.get<string>('MQTT_USERNAME')
+                  ?? this.config.get<string>('MQTT_BACKEND_USER')
+                  ?? 'guaycore_backend';
+    const password = this.config.get<string>('MQTT_PASSWORD')
+                  ?? this.config.get<string>('MQTT_BACKEND_PASS')
+                  ?? 'backend_secret';
 
     this.client = mqtt.connect(url, {
       username,
