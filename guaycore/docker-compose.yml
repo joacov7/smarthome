@@ -52,7 +52,7 @@ services:
       # Auth via HTTP hook → valida contra el backend
       EMQX_AUTHENTICATION__1__MECHANISM:   password_based
       EMQX_AUTHENTICATION__1__BACKEND:     http
-      EMQX_AUTHENTICATION__1__URL:         http://host.docker.internal:3000/internal/mqtt/auth
+      EMQX_AUTHENTICATION__1__URL:         http://host.docker.internal:3000/api/v1/internal/mqtt/auth
       EMQX_AUTHENTICATION__1__METHOD:      post
       EMQX_AUTHENTICATION__1__HEADERS__content-type: application/json
       EMQX_AUTHENTICATION__1__BODY:        '{"username":"$${username}","password":"$${password}","clientid":"$${clientid}"}'
